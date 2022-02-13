@@ -1,0 +1,54 @@
+name: CI Backend
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+    branches:
+      - main
+  pull_request_target:
+    paths:
+      - 'backend/**'
+    branches:
+      - main
+
+env:
+  NAME: acme-explorer
+  PORT: 3000
+  SERVER_TIMEOUT: 20000
+  DB_URI: ${{ secrets.DB_URI }}
+  SECRET: ${{ secrets.JWT_SECRET }}
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  lint:
+      name: Lint
+      runs-on: ubuntu-latest
+      steps:
+          - uses: actions/checkout@v2
+          - uses: actions/setup-node@v2
+            with:
+              node-version: '16'
+              cache: 'npm'
+              cache-dependency-path: ./backend/package-lock.json
+
+          - run: npm ci
+          - run: npm run lint
+
+  test:
+      name: Test
+      runs-on: ubuntu-latest
+      needs: lint
+      steps:
+          - uses: actions/checkout@v2
+          - uses: actions/setup-node@v2
+            with:
+              node-version: '16'
+              cache: 'npm'
+              cache-dependency-path: ./backend/package-lock.json
+
+          - run: npm ci
+          - run: npm test

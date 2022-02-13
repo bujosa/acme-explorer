@@ -102,3 +102,15 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Jetbrains
+.idea
+
+# Mac files
+.DS_Store
+
+# Kube
+kubertenes/secret.yml
+
+# VSCode
+.vscode/

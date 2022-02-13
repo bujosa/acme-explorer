@@ -1,0 +1,46 @@
+{
+  "name": "acme-explorer-backend",
+  "version": "1.0.0",
+  "description": "Acme explorer backend to mange custom trips for explorers",
+  "main": "src/index.js",
+  "type": "module",
+  "author": "acme-explorer",
+  "license": "MIT",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon",
+    "lint": "semistandard",
+    "test": "cross-env PORT=4000 NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles --testMatch='**/tests.js' --coverage"
+  },
+  "pre-commit": [
+    "lint"
+  ],
+  "dependencies": {
+    "acme-explorer-common": "1.0.0",
+    "bcrypt": "^5.0.1",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "http-status-codes": "^2.1.4",
+    "moment": "^2.29.1",
+    "mongoose": "^6.0.15",
+    "mongoose-to-swagger": "^1.4.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "jest": "^27.4.3",
+    "pre-commit": "^1.2.2",
+    "semistandard": "^16.0.1",
+    "supertest": "^6.1.6"
+  },
+  "jest": {
+    "transform": {}
+  },
+  "semistandard": {
+    "env": [
+      "jest"
+    ],
+    "ignore": [
+      "src/index.js"
+    ]
+  }
+}
