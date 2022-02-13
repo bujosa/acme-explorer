@@ -1,4 +1,4 @@
-import { App as BaseApp } from 'acme-explorer-common';
+import { App as BaseApp } from './core/app.js';
 
 class App extends BaseApp {
   getSwaggerOptions () {
