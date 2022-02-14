@@ -8,5 +8,13 @@ export const SwaggerSchemas = {
     items: {
       $ref: '#/components/schemas/Sponsorship'
     }
+  },
+  SponsorshipPayload: {
+    type: 'object',
+    properties: {
+      banner: {
+        type: 'string'
+      }
+    }
   }
 };

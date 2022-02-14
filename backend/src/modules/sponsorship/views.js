@@ -22,6 +22,27 @@ export default [{
     get: async (req, res) => {
       const records = await Sponsorship.find({});
       res.json(records.map(record => record.toClient()));
+    },
+    /**
+     * @swagger
+     * /sponsorships:
+     *   post:
+     *     description: Create a new sponsorship
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/SponsorshipPayload'
+     *     responses:
+     *       201:
+     *         description: Object with the new sponsorship created
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Sponsorship'
+     */
+    post: async (req, res, next) => {
     }
   }
 }];

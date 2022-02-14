@@ -8,5 +8,13 @@ export const SwaggerSchemas = {
     items: {
       $ref: '#/components/schemas/Finder'
     }
+  },
+  FinderPayload: {
+    type: 'object',
+    properties: {
+      keyword: {
+        type: 'string'
+      }
+    }
   }
 };

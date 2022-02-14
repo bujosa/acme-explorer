@@ -3,6 +3,9 @@ const { Schema } = mongoose;
 
 export default {
   Sponsorship: new Schema({
-    name: String
+    trip: { type: Schema.Types.ObjectId, ref: 'Trip' },
+    banner: String,
+    link: String,
+    state: { type: String, required: true, enum: ['active', 'inactive'], default: 'active' }
   })
 };

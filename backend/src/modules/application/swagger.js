@@ -8,5 +8,13 @@ export const SwaggerSchemas = {
     items: {
       $ref: '#/components/schemas/Application'
     }
+  },
+  ApplicationPayload: {
+    type: 'object',
+    properties: {
+      comment: {
+        type: 'string'
+      }
+    }
   }
 };

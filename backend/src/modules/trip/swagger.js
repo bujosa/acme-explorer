@@ -8,5 +8,13 @@ export const SwaggerSchemas = {
     items: {
       $ref: '#/components/schemas/Trip'
     }
+  },
+  TripPayload: {
+    type: 'object',
+    properties: {
+      title: {
+        type: 'string'
+      }
+    }
   }
 };
