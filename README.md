@@ -2,8 +2,8 @@
 
 > Acme Explorer web application to manage custom trips for explorers. 
 
-* [![Build Status](https://github.com/acme-explorer/acme-explorer/workflows/CI%20Backend/badge.svg)](https://github.com/0aps/art-marketplace/actions)
-* [![Build Status](https://github.com/acme-explorer/acme-explorer/workflows/CI%20Frontend/badge.svg)](https://github.com/0aps/art-marketplace/actions)
+* [![Build Status](https://github.com/acme-explorer/acme-explorer/workflows/CI%20Backend/badge.svg)](https://github.com/acme-explorer/acme-explorer/actions)
+* [![Build Status](https://github.com/acme-explorer/acme-explorer/workflows/CI%20Frontend/badge.svg)](https://github.com/acme-explorer/acme-explorer/actions)
 
 ## System requirements
 

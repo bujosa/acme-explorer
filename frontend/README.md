@@ -2,7 +2,7 @@
 
 > Provides capability to serve the frontend static files for the single page app.
 
-* [![Build Status](https://github.com/acme-explorer/acme-explorer/workflows/CI%20Frontend/badge.svg)](https://github.com/0aps/art-marketplace/actions)
+* [![Build Status](https://github.com/acme-explorer/acme-explorer/workflows/CI%20Frontend/badge.svg)](https://github.com/acme-explorer/acme-explorer/actions)
 
 ## System requirements
 

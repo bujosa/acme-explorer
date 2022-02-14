@@ -2,7 +2,7 @@
 
 > Manage custom trips for explorers. Provides all API logic to support the system transactions.
 
-* [![Build Status](https://github.com/acme-explorer/acme-explorer/workflows/CI%20Backend/badge.svg)](https://github.com/0aps/art-marketplace/actions)
+* [![Build Status](https://github.com/acme-explorer/acme-explorer/workflows/CI%20Backend/badge.svg)](https://github.com/acme-explorer/acme-explorer/actions)
 
 ## System requirements
 
