@@ -1,0 +1,18 @@
+{
+    "parserOptions": {
+        "sourceType": "module",
+        "ecmaVersion": 2020,
+        "ecmaFeatures": {
+             "jsx": true,
+            "experimentalObjectRestSpread": true
+        }
+    },
+    "rules": {
+       "space-before-function-paren": ["error", {
+            "anonymous": "never",
+            "named": "never",
+            "asyncArrow": "always"
+        }]
+    }
+   
+}
