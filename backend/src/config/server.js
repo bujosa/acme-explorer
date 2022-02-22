@@ -1,11 +1,13 @@
 import bodyParser from 'body-parser';
 import express from 'express';
-import { dbConnection, dbClose } from '../database/config.js';
+import { StatusCodes } from 'http-status-codes';
+import { dbConnection, dbClose } from './database.js';
 import { actorRoutes } from '../routes/actorRoutes.js';
 import { finderRoutes } from '../routes/finderRoutes.js';
 import { applicationRoutes } from '../routes/applicationRoutes.js';
 import { sponsorshipRoutes } from '../routes/sponsorshipRoutes.js';
 import { tripRoutes } from '../routes/tripRoutes.js';
+import { redisConnection, redisClose } from './redis.js';
 
 export class Server {
   constructor() {
@@ -14,6 +16,7 @@ export class Server {
     this.port = process.env.PORT || 8080;
 
     dbConnection();
+    redisConnection();
   }
 
   middlewares() {
@@ -26,6 +29,17 @@ export class Server {
     applicationRoutes(this.app);
     sponsorshipRoutes(this.app);
     tripRoutes(this.app);
+
+    this.app.use((err, req, res, next) => {
+      if (err.code) {
+        res.status(err.code).json(err.toClient());
+      } else {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err.message);
+      }
+    });
+    this.app.use((req, res) => {
+      res.sendStatus(StatusCodes.NOT_FOUND);
+    });
   }
 
   execute() {
@@ -40,5 +54,6 @@ export class Server {
       await this.instance.close();
     }
     await dbClose();
+    await redisClose();
   }
 }

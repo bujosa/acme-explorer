@@ -6,6 +6,13 @@ const credentials = {
 const seedCollections = [{
 	name : 'trips',
 	data : []
+}, {
+    name: 'configurations',
+    data: [
+        {key: 'maxResultsFinder', value: 10},
+        {key: 'timeCachedFinder', value: 60 * 60},
+        {key: 'sponsorshipFlatRate', value: 0.25}
+    ]
 }];
 
 for (let i = 0; i < databases.length; ++i) {
