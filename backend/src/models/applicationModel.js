@@ -13,7 +13,6 @@ const ApplicationSchema = new Schema(
       default: 'pending'
     },
     rejectedReason: { type: String, default: null },
-    rejectedReason: { type: String, default: null },
     isPaid: { type: Boolean, default: false },
     createdAt: Number,
     updatedAt: Number

@@ -5,6 +5,11 @@ const { Schema } = mongoose;
 
 const FinderSchema = new Schema(
   {
+    name: {
+      type: String,
+      required: true
+    },
+    actor: { type: Schema.Types.ObjectId, ref: 'Actor', required: true, index: true },
     keyword: {
       type: String,
       default: null
@@ -32,7 +37,5 @@ const FinderSchema = new Schema(
     timestamps: { currentTime: () => moment().unix() }
   }
 );
-
-FinderSchema.index({ keyword: 'text' });
 
 export const finderModel = mongoose.model('Finders', FinderSchema);
