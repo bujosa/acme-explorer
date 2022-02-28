@@ -1,6 +1,8 @@
 import { tripModel } from '../models/tripModel.js';
+import { finderModel } from '../models/finderModel.js';
+import { StatusCodes } from 'http-status-codes';
 
-export const trips_prices_statistics = (req, res) => {
+export const tripsPricesStatistics = (req, res) => {
   tripModel.aggregate(
     [
       {
@@ -32,7 +34,7 @@ export const trips_prices_statistics = (req, res) => {
   );
 };
 
-export const trips_managers_statistics = (req, res) => {
+export const tripsManagersStatistics = (req, res) => {
   tripModel.aggregate(
     [
       {
@@ -68,4 +70,51 @@ export const trips_managers_statistics = (req, res) => {
       }
     }
   );
+};
+
+export const getFinderStatistics = async (req, res) => {
+  try {
+    const statistics = await finderModel.aggregate([
+      {
+        $facet: {
+          price: [
+            {
+              $group: {
+                _id: 0,
+                avgMin: { $avg: '$minPrice' },
+                avgMax: { $avg: '$maxPrice' }
+              }
+            },
+            {
+              $project: {
+                _id: 0,
+                avgMin: 1,
+                avgMax: 1
+              }
+            }
+          ],
+          keywords: [
+            {
+              $group: {
+                _id: '$keyword',
+                count: { $sum: 1 }
+              }
+            },
+            {
+              $project: {
+                _id: 0,
+                keyword: '$_id',
+                count: 1
+              }
+            },
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+          ]
+        }
+      }
+    ]);
+    res.json(statistics);
+  } catch (e) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(e.message);
+  }
 };
