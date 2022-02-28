@@ -13,7 +13,7 @@ const ConfigurationSchema = new Schema({
   }
 });
 
-ConfigurationSchema.statics.getRedisConfig = async function() {
+ConfigurationSchema.statics.getRedisConfig = async function () {
   const configurations = (await this.find({ key: { $in: ['maxResultsFinder', 'timeCachedFinder'] } })) || [];
   return configurations.reduce((a, config) => ({ ...a, [config.key]: config.value }), {}) || {};
 };
