@@ -11,7 +11,6 @@ import { dashboardRoutes } from '../routes/dashboardRoutes.js';
 import { StatusCodes } from 'http-status-codes';
 import { errorHandler } from '../shared/middlewares/error-handler.js';
 
-
 export class Server {
   constructor() {
     this.app = express();

@@ -6,7 +6,7 @@ on:
       - 'backend/**'
     branches:
       - main
-  pull_request_target:
+  pull_request:
     paths:
       - 'backend/**'
     branches:
@@ -17,6 +17,7 @@ env:
   PORT: 3000
   SERVER_TIMEOUT: 20000
   DB_URI: ${{ secrets.DB_URI }}
+  REDIS_URI: ${{ secrets.REDIS_URI }}
   SECRET: ${{ secrets.JWT_SECRET }}
 
 defaults:
