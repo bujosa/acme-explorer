@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import moment from 'moment';
+import { UserState, Roles, Languages } from '../shared/enums.js';
 
 const { Schema } = mongoose;
 
@@ -19,20 +20,22 @@ const ActorSchema = new Schema(
       unique: true,
       match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
     },
+    phoneNumber: { type: String, default: null },
+    address: { type: String, default: null },
     preferredLanguage: {
       type: String,
-      enum: ['en', 'es'],
-      default: 'es'
+      enum: Object.values(Languages),
+      default: Languages.ES
     },
     role: {
       type: String,
-      required: 'The user must be have one role',
-      enum: ['explorer', 'sponsor', 'manager', 'admin']
+      default: Roles.EXPLORER,
+      enum: Object.values(Roles)
     },
     state: {
       type: String,
-      enum: ['active', 'inactive'],
-      default: 'active'
+      enum: Object.values(UserState),
+      default: UserState.ACTIVE
     },
     createdAt: Number,
     updatedAt: Number

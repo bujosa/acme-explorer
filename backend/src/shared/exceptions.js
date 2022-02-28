@@ -1,18 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
-
-export class BaseError extends Error {
-  constructor(message) {
-    super(message);
-    this.code = StatusCodes.BAD_REQUEST;
-  }
-
-  toClient() {
-    return {
-      message: this.message,
-      code: this.code
-    };
-  }
-}
+import { BaseError } from './errors/base-error.js';
 
 export class RecordNotFound extends BaseError {
   constructor(message = '') {
