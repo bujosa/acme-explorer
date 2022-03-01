@@ -1,6 +1,7 @@
 import { tripModel } from '../models/tripModel.js';
 import { finderModel } from '../models/finderModel.js';
 import { StatusCodes } from 'http-status-codes';
+import { applicationModel } from '../models/applicationModel.js';
 
 export const tripsPricesStatistics = (req, res) => {
   tripModel.aggregate(
@@ -114,6 +115,65 @@ export const getFinderStatistics = async (req, res) => {
       }
     ]);
     res.json(statistics);
+  } catch (e) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(e.message);
+  }
+};
+
+export const getApplicationStatistics = async (req, res) => {
+  try {
+    const statistics = await applicationModel.aggregate([
+      {
+        $group: {
+          _id: '$trip',
+          countApplications: { $count: {} }
+        }
+      },
+      {
+        $group: {
+          _id: 0,
+          avgCount: { $avg: '$countApplications' },
+          minCount: { $min: '$countApplications' },
+          maxCount: { $max: '$countApplications' },
+          stdCount: { $stdDevSamp: '$countApplications' }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          avgCount: 1,
+          minCount: 1,
+          maxCount: 1,
+          stdCount: 1
+        }
+      }
+    ]);
+    res.json(statistics);
+  } catch (e) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(e.message);
+  }
+};
+
+export const getRatioOfApplications = async (req, res) => {
+  try {
+    const totalNum = await applicationModel.countDocuments({});
+    const aplications = await applicationModel.aggregate([
+      {
+        $group: {
+          _id: '$state',
+          count: { $count: {} }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          status: '$_id',
+          count: 1,
+          ratio: { $multiply: [{ $divide: [100, totalNum] }, '$count'] }
+        }
+      }
+    ]);
+    res.json(aplications);
   } catch (e) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(e.message);
   }

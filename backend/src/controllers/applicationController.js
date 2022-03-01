@@ -12,29 +12,6 @@ export const findAllApplications = async (req, res, next) => {
   }
 };
 
-export const findApplicationsByStatus = async (req, res) => {
-  try {
-    const aplications = await applicationModel.aggregate([
-      {
-        $group: {
-          _id: '$state',
-          total: { $sum: 1 }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          status: '$_id',
-          total: 1
-        }
-      }
-    ]);
-    res.json(aplications);
-  } catch (e) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(e.message);
-  }
-};
-
 export const findApplication = async (req, res, next) => {
   try {
     const application = await applicationModel.findById(req.params.applicationId);
