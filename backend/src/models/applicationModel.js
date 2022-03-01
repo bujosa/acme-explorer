@@ -1,19 +1,20 @@
 import mongoose from 'mongoose';
 import moment from 'moment';
+import { ApplicationState } from '../shared/enums.js';
 
 const { Schema } = mongoose;
 
 const ApplicationSchema = new Schema(
   {
-    explorer: { type: Schema.Types.ObjectId, ref: 'Actor', default: null },
+    explorer: { type: Schema.Types.ObjectId, ref: 'Actor', required: 'Please provide a explorer.' },
+    trip: { type: Schema.Types.ObjectId, ref: 'Trip', required: 'Please provide a trip.' },
+    comments: [String],
     state: {
       type: String,
-      required: true,
-      enum: ['pending', 'rejected', 'due', 'accepted'],
-      default: 'pending'
+      enum: Object.values(ApplicationState),
+      default: ApplicationState.PENDING
     },
-    rejectedReason: { type: String, default: null },
-    isPaid: { type: Boolean, default: false },
+    reasonRejected: { type: String, default: null },
     createdAt: Number,
     updatedAt: Number
   },
@@ -21,5 +22,9 @@ const ApplicationSchema = new Schema(
     timestamps: { currentTime: () => moment().unix() }
   }
 );
+
+ApplicationSchema.index({ explorer: 1 });
+ApplicationSchema.index({ trip: 1 });
+ApplicationSchema.index({ state: 1 });
 
 export const applicationModel = mongoose.model('Applications', ApplicationSchema);

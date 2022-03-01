@@ -1,13 +1,21 @@
 export const Roles = {
   EXPLORER: 'explorer',
-  SPONSORR: 'sponsor',
+  SPONSOR: 'sponsor',
   MANAGER: 'manager',
   ADMIN: 'admin'
 };
 
-export const UserState = {
+export const BasicState = {
   ACTIVE: 'active',
   INACTIVE: 'inactive'
+};
+
+export const ApplicationState = {
+  PENDING: 'pending',
+  REJECTED: 'rejected',
+  DUE: 'due',
+  ACCEPTED: 'accepted',
+  CANCELLED: 'cancelled'
 };
 
 export const Languages = {

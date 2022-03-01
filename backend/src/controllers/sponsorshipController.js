@@ -1,61 +1,84 @@
+import { StatusCodes } from 'http-status-codes';
 import { sponsorshipModel } from '../models/sponsorshipModel.js';
+import { RecordNotFound } from '../shared/exceptions.js';
+import { BasicState } from '../shared/enums.js';
 
-export const find_all_sponsorships = (req, res) => {
-  sponsorshipModel.find({}, (err, sponsorships) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.json(sponsorships);
-    }
-  });
+export const findAllSponsorships = async (req, res, next) => {
+  try {
+    const sponsorships = await sponsorshipModel.find({});
+    res.json(sponsorships);
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+  }
 };
 
-export const find_an_sponsorship = (req, res) => {
-  sponsorshipModel.findById(req.params.sponsorshipId, (err, sponsorship) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.json(sponsorship);
+export const findSponsorship = async (req, res, next) => {
+  try {
+    const sponsorship = await sponsorshipModel.findById(req.params.sponsorshipId);
+
+    if (!sponsorship) {
+      return next(new RecordNotFound());
     }
-  });
+
+    res.json(sponsorship);
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+  }
 };
 
-export const create_an_sponsorship = (req, res) => {
+export const createSponsorship = async (req, res) => {
   const newSponsorship = new sponsorshipModel(req.body);
 
-  newSponsorship.save((err, sponsorship) => {
-    if (err) {
-      if (err.name === 'ValidationError') {
-        res.status(422).send(err);
-      } else {
-        res.status(500).send(err);
-      }
+  try {
+    const sponsorship = await newSponsorship.save();
+    res.status(StatusCodes.CREATED).json(sponsorship);
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      res.status(StatusCodes.UNPROCESSABLE_ENTITY).json(error);
     } else {
-      res.json(sponsorship);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
     }
-  });
+  }
 };
 
-export const update_an_sponsorship = (req, res) => {
-  sponsorshipModel.findOneAndUpdate({ _id: req.params.sponsorshipId }, req.body, { new: true }, (err, sponsorship) => {
-    if (err) {
-      if (err.name === 'ValidationError') {
-        res.status(422).send(err);
-      } else {
-        res.status(500).send(err);
-      }
+export const updateSponsorship = async (req, res) => {
+  try {
+    const sponsorship = await sponsorshipModel.findOneAndUpdate({ _id: req.params.sponsorshipId }, req.body, {
+      new: true
+    });
+    res.json(sponsorship);
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      res.status(StatusCodes.UNPROCESSABLE_ENTITY).json(error);
     } else {
-      res.json(sponsorship);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
     }
-  });
+  }
 };
 
-export const delete_an_sponsorship = (req, res) => {
-  sponsorshipModel.deleteOne({ _id: req.params.sponsorshipId }, (err, sponsorship) => {
-    if (err) {
-      res.status(500).send(err);
+export const deleteSponsorship = async (req, res) => {
+  try {
+    await sponsorshipModel.deleteOne({ _id: req.params.sponsorshipId });
+    res.sendStatus(StatusCodes.NO_CONTENT);
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+  }
+};
+
+export const paySponsorship = async (req, res) => {
+  try {
+    const isPaymentApproved = true; // Payment logic and connection with Paypal
+
+    if (isPaymentApproved) {
+      const activeSponsorship = await sponsorshipModel.findOneAndUpdate(
+        { _id: req.params.sponsorshipId },
+        { state: BasicState.ACTIVE }
+      );
+      res.json(activeSponsorship);
     } else {
-      res.json({ message: 'Sponsorship successfully deleted' });
+      res.status(StatusCodes.SERVICE_UNAVAILABLE).send({ message: 'Error processing payment.' });
     }
-  });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+  }
 };

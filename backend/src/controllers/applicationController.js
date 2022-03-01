@@ -1,61 +1,140 @@
+import { StatusCodes } from 'http-status-codes';
 import { applicationModel } from '../models/applicationModel.js';
+import { ApplicationState } from '../shared/enums.js';
+import { RecordNotFound } from '../shared/exceptions.js';
 
-export const find_all_applications = (req, res) => {
-  applicationModel.find({}, (err, applications) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.json(applications);
-    }
-  });
+export const findAllApplications = async (req, res, next) => {
+  try {
+    const applications = await applicationModel.find({}).sort('state');
+    res.json(applications);
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+  }
 };
 
-export const find_an_application = (req, res) => {
-  applicationModel.findById(req.params.applicationId, (err, application) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.json(application);
-    }
-  });
+export const findApplicationsByStatus = async (req, res) => {
+  try {
+    const aplications = await applicationModel.aggregate([
+      {
+        $group: {
+          _id: '$state',
+          total: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          status: '$_id',
+          total: 1
+        }
+      }
+    ]);
+    res.json(aplications);
+  } catch (e) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(e.message);
+  }
 };
 
-export const create_an_application = (req, res) => {
+export const findApplication = async (req, res, next) => {
+  try {
+    const application = await applicationModel.findById(req.params.applicationId);
+
+    if (!application) {
+      return next(new RecordNotFound());
+    }
+
+    res.json(application);
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+  }
+};
+
+export const createApplication = async (req, res) => {
   const newApplication = new applicationModel(req.body);
 
-  newApplication.save((err, application) => {
-    if (err) {
-      if (err.name === 'ValidationError') {
-        res.status(422).send(err);
-      } else {
-        res.status(500).send(err);
-      }
+  try {
+    const application = await newApplication.save();
+    res.status(StatusCodes.CREATED).json(application);
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      res.status(StatusCodes.UNPROCESSABLE_ENTITY).json(error);
     } else {
-      res.json(application);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
     }
-  });
+  }
 };
 
-export const update_an_application = (req, res) => {
-  applicationModel.findOneAndUpdate({ _id: req.params.applicationId }, req.body, { new: true }, (err, application) => {
-    if (err) {
-      if (err.name === 'ValidationError') {
-        res.status(422).send(err);
-      } else {
-        res.status(500).send(err);
-      }
+export const updateApplication = async (req, res) => {
+  try {
+    const application = await applicationModel.findOneAndUpdate({ _id: req.params.applicationId }, req.body, {
+      new: true
+    });
+    res.json(application);
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      res.status(StatusCodes.UNPROCESSABLE_ENTITY).json(error);
     } else {
-      res.json(application);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
     }
-  });
+  }
 };
 
-export const delete_an_application = (req, res) => {
-  applicationModel.deleteOne({ _id: req.params.applicationId }, (err, application) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.json({ message: 'Application successfully deleted' });
+export const deleteApplication = async (req, res) => {
+  try {
+    await applicationModel.deleteOne({ _id: req.params.applicationId });
+    res.sendStatus(StatusCodes.NO_CONTENT);
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+  }
+};
+
+export const cancelApplication = async (req, res, next) => {
+  try {
+    // TODO: only the actor that created the application should cancel it
+    const application = await applicationModel.findById(req.params.applicationId);
+
+    if (!application) {
+      return next(new RecordNotFound());
     }
-  });
+
+    if (!(application.state === ApplicationState.PENDING || application.state === ApplicationState.ACCEPTED)) {
+      return res.status(StatusCodes.BAD_REQUEST).send('The application must be PENDING or ACCEPTED.');
+    }
+
+    const cancelledApplication = await applicationModel.findOneAndUpdate(
+      { _id: req.params.applicationId },
+      { state: ApplicationState.CANCELLED }
+    );
+    res.json(cancelledApplication);
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+  }
+};
+
+export const payApplication = async (req, res, next) => {
+  try {
+    const application = await applicationModel.findById(req.params.applicationId);
+
+    if (!application) {
+      return next(new RecordNotFound());
+    }
+
+    if (application.state !== ApplicationState.DUE) {
+      return res.status(StatusCodes.BAD_REQUEST).send('The application must be DUE.');
+    }
+
+    const isPaymentApproved = true; // Payment logic and connection with Paypal
+
+    if (isPaymentApproved) {
+      const acceptedApplication = await applicationModel.findOneAndUpdate(
+        { _id: req.params.applicationId },
+        { state: ApplicationState.ACCEPTED }
+      );
+      res.json(acceptedApplication);
+    } else {
+      res.status(StatusCodes.SERVICE_UNAVAILABLE).send({ message: 'Error processing payment.' });
+    }
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+  }
 };

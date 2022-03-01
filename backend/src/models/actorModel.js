@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import moment from 'moment';
-import { UserState, Roles, Languages } from '../shared/enums.js';
+import { BasicState, Roles, Languages } from '../shared/enums.js';
 
 const { Schema } = mongoose;
 
@@ -34,8 +34,8 @@ const ActorSchema = new Schema(
     },
     state: {
       type: String,
-      enum: Object.values(UserState),
-      default: UserState.ACTIVE
+      enum: Object.values(BasicState),
+      default: BasicState.ACTIVE
     },
     createdAt: Number,
     updatedAt: Number
