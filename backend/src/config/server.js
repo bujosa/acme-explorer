@@ -1,5 +1,7 @@
 import bodyParser from 'body-parser';
 import express from 'express';
+import swaggerUI from 'swagger-ui-express';
+import { swaggerSpec } from './swagger.js';
 import { dbConnection, dbClose } from './database.js';
 import { actorRoutes } from '../routes/actorRoutes.js';
 import { finderRoutes } from '../routes/finderRoutes.js';
@@ -24,6 +26,9 @@ export class Server {
   middlewares() {
     this.app.use(bodyParser.urlencoded({ extended: true }));
     this.app.use(bodyParser.json());
+
+    // Swagger
+    this.app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
     // End Points
     actorRoutes(this.app);
