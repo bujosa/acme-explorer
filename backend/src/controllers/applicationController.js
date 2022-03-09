@@ -5,7 +5,10 @@ import { RecordNotFound } from '../shared/exceptions.js';
 
 export const findAllApplications = async (req, res, next) => {
   try {
-    const applications = await applicationModel.find({}).sort('state');
+    const applications = await applicationModel
+      .find({})
+      .populate(['trip', { path: 'explorer', model: 'Actors' }])
+      .sort('state');
     res.json(applications);
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
@@ -60,6 +63,61 @@ export const deleteApplication = async (req, res) => {
   try {
     await applicationModel.deleteOne({ _id: req.params.applicationId });
     res.sendStatus(StatusCodes.NO_CONTENT);
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+  }
+};
+
+export const acceptApplication = async (req, res, next) => {
+  try {
+    const application = await applicationModel.findById(req.params.applicationId);
+
+    if (!application) {
+      return next(new RecordNotFound());
+    }
+
+    if (application.state !== ApplicationState.PENDING) {
+      return res.status(StatusCodes.BAD_REQUEST).send('The application must be PENDING.');
+    }
+
+    const acceptedApplication = await applicationModel.findOneAndUpdate(
+      { _id: req.params.applicationId },
+      { state: ApplicationState.DUE }
+    );
+
+    res.json(acceptedApplication);
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+  }
+};
+
+export const rejectApplication = async (req, res, next) => {
+  try {
+    const application = await applicationModel.findById(req.params.applicationId);
+
+    if (!application) {
+      return next(new RecordNotFound());
+    }
+
+    if (application.state !== ApplicationState.PENDING) {
+      return res.status(StatusCodes.BAD_REQUEST).send('The application must be PENDING.');
+    }
+
+    if (!req.body.reasonRejected) {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .send('You must provide a rejection reason: "reasonRejected": "example"');
+    }
+
+    const rejectedApplication = await applicationModel.findOneAndUpdate(
+      { _id: req.params.applicationId },
+      {
+        state: ApplicationState.REJECTED,
+        reasonRejected: req.body.reasonRejected
+      }
+    );
+
+    res.json(rejectedApplication);
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
   }
