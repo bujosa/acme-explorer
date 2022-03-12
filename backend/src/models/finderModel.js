@@ -20,7 +20,13 @@ const FinderSchema = new Schema(
     },
     maxPrice: {
       type: Number,
-      default: null
+      default: null,
+      validate: {
+        validator: function(v) {
+          return this.minPrice <= v;
+        },
+        message: 'Min price must be less than max price'
+      }
     },
     startDate: {
       type: Number,
@@ -28,7 +34,13 @@ const FinderSchema = new Schema(
     },
     endDate: {
       type: Number,
-      default: null
+      default: null,
+      validate: {
+        validator: function(v) {
+          return this.startDate <= v;
+        },
+        message: 'Start date must be less than end date'
+      }
     },
     createdAt: Number,
     updatedAt: Number
@@ -38,4 +50,4 @@ const FinderSchema = new Schema(
   }
 );
 
-export const finderModel = mongoose.model('Finders', FinderSchema);
+export const finderModel = mongoose.model('Finder', FinderSchema);

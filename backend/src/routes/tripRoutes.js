@@ -1,11 +1,10 @@
 import {
-  find_all_trips,
-  find_trips_by_keyword,
-  create_trip,
-  find_trip,
-  update_trip,
-  delete_trip,
-  find_my_trips
+  findTrips,
+  createTrip,
+  findTrip,
+  updateTrip,
+  deleteTrip,
+  findMyTrips
 } from '../controllers/tripController.js';
 
 export const tripRoutes = (app) => {
@@ -48,7 +47,7 @@ export const tripRoutes = (app) => {
    *              schema:
    *                $ref: '#/components/schemas/trip'
    */
-  app.route('/v1/trips').get(find_trips_by_keyword).post(create_trip);
+  app.route('/v1/trips').get(findTrips).post(createTrip);
 
   /**
    * @openapi
@@ -112,20 +111,12 @@ export const tripRoutes = (app) => {
    *       404:
    *         description: The trip was not found
    */
-  app.route('/v1/trips/:tripId').get(find_trip).put(update_trip).delete(delete_trip);
+  app.route('/v1/trips/:tripId').get(findTrip).put(updateTrip).delete(deleteTrip);
 
   /**
    * @section trips
    * @type get
    * @url /v1/myTrips
    */
-  app.route('/v1/myTrips').get(find_my_trips);
-
-  /**
-   * @section trips
-   * @type get
-   * @url /v1/allTrips
-   */
-  // This route is not part of the requirements, consider removing it
-  app.route('/v1/allTrips').get(find_all_trips);
+  app.route('/v1/myTrips').get(findMyTrips);
 };

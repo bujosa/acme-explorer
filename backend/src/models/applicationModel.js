@@ -27,4 +27,4 @@ ApplicationSchema.index({ explorer: 1 });
 ApplicationSchema.index({ trip: 1 });
 ApplicationSchema.index({ state: 1 });
 
-export const applicationModel = mongoose.model('Applications', ApplicationSchema);
+export const applicationModel = mongoose.model('Application', ApplicationSchema);

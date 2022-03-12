@@ -98,7 +98,8 @@ const TripSchema = new Schema({
   manager: {
     // TODO: It must belong to an actor of type manager
     type: Schema.Types.ObjectId,
-    required: true
+    ref: 'Actor',
+    required: 'Please provide a manager.'
   }
 });
 

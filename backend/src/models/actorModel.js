@@ -45,4 +45,4 @@ const ActorSchema = new Schema(
   }
 );
 
-export const actorModel = mongoose.model('Actors', ActorSchema);
+export const actorModel = mongoose.model('Actor', ActorSchema);

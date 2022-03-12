@@ -18,4 +18,4 @@ ConfigurationSchema.statics.getRedisConfig = async function() {
   return configurations.reduce((a, config) => ({ ...a, [config.key]: config.value }), {}) || {};
 };
 
-export const configurationModel = mongoose.model('Configurations', ConfigurationSchema);
+export const configurationModel = mongoose.model('Configuration', ConfigurationSchema);

@@ -1,11 +1,11 @@
 import {
-  find_all_actors,
-  create_an_actor,
-  find_an_actor,
-  update_an_actor,
-  delete_an_actor,
-  ban_an_actor,
-  unban_an_actor
+  findActors,
+  createActor,
+  findActor,
+  updateActor,
+  deleteActor,
+  banActor,
+  unbanActor
 } from '../controllers/actorController.js';
 
 export const actorRoutes = (app) => {
@@ -48,7 +48,7 @@ export const actorRoutes = (app) => {
    *              schema:
    *                $ref: '#/components/schemas/actor'
    */
-  app.route('/v1/actors').get(find_all_actors).post(create_an_actor);
+  app.route('/v1/actors').get(findActors).post(createActor);
 
   /**
    * @openapi
@@ -112,7 +112,7 @@ export const actorRoutes = (app) => {
    *       404:
    *         description: The actor was not found
    */
-  app.route('/v1/actors/:actorId').get(find_an_actor).put(update_an_actor).delete(delete_an_actor);
+  app.route('/v1/actors/:actorId').get(findActor).put(updateActor).delete(deleteActor);
 
   /**
    * @openapi
@@ -133,7 +133,7 @@ export const actorRoutes = (app) => {
    *             schema:
    *               $ref: '#/components/schemas/actors'
    */
-  app.route('/v1/actors/:actorId/ban').patch(ban_an_actor);
+  app.route('/v1/actors/:actorId/ban').patch(banActor);
 
   /**
    * @openapi
@@ -154,5 +154,5 @@ export const actorRoutes = (app) => {
    *             schema:
    *               $ref: '#/components/schemas/actors'
    */
-  app.route('/v1/actors/:actorId/unban').patch(unban_an_actor);
+  app.route('/v1/actors/:actorId/unban').patch(unbanActor);
 };
