@@ -1,22 +1,8 @@
 import { tripModel } from '../models/tripModel.js';
 
-export const find_all_trips = (req, res) => {
-  tripModel.find({}, (err, trips) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.json(
-        trips.map((trip) => {
-          return trip.cleanup();
-        })
-      );
-    }
-  });
-};
-
 // Find one trip by id
 // TODO: If trip is INACTIVE, only its owner (manager) can see it
-export const find_trip = (req, res) => {
+export const findTrip = (req, res) => {
   tripModel.findById(req.params.tripId, (err, trip) => {
     if (err) {
       res.status(500).send(err);
@@ -30,7 +16,7 @@ export const find_trip = (req, res) => {
 
 // Find trips of the logged in manager
 // TODO: Session management
-export const find_my_trips = (req, res) => {
+export const findMyTrips = (req, res) => {
   tripModel.find(
     {
       // manager: req.params.managerId
@@ -49,7 +35,7 @@ export const find_my_trips = (req, res) => {
   );
 };
 
-export const find_trips_by_keyword = (req, res) => {
+export const findTrips = (req, res) => {
   // If no keyword is provided, return all trips with state=Active or state=cancelled
   const keyword = req.query.keyword;
 
@@ -61,8 +47,7 @@ export const find_trips_by_keyword = (req, res) => {
   // if keyword is not null, undefined or empty
   if (keyword !== null && keyword !== undefined && keyword !== '') {
     query.$text = { $search: keyword };
-    (query = query), { score: { $meta: 'textScore' } };
-
+    query.score = { $meta: 'textScore' };
     sort = { sort: { score: { $meta: 'textScore' } } };
   }
 
@@ -79,7 +64,7 @@ export const find_trips_by_keyword = (req, res) => {
   });
 };
 
-export const create_trip = (req, res) => {
+export const createTrip = (req, res) => {
   console.log(Date() + ' - POST /trips');
   // TODO: Check credentials (manager)
 
@@ -111,7 +96,7 @@ export const create_trip = (req, res) => {
 };
 
 // A manager can update an INACTIVE trip that belongs to him
-export const update_trip = (req, res) => {
+export const updateTrip = (req, res) => {
   console.log(Date() + ' - PUT /trips/' + req.params.tripId);
   // TODO: Check credentials (manager)
   // TODO: Check that the trip belongs to the logged manager
@@ -171,7 +156,7 @@ export const update_trip = (req, res) => {
 };
 
 // A manager can delete an INACTIVE trip that belongs to him
-export const delete_trip = (req, res) => {
+export const deleteTrip = (req, res) => {
   // TODO: Check that the user is logged in as a manager
   // TODO: Check that the trip belongs to the logged manager
   // TODO: Check that the object id fulfills the regex (and return 404 if not)

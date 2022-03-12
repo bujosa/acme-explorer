@@ -5,10 +5,7 @@ import { RecordNotFound } from '../shared/exceptions.js';
 
 export const findAllApplications = async (req, res, next) => {
   try {
-    const applications = await applicationModel
-      .find({})
-      .populate(['trip', { path: 'explorer', model: 'Actors' }])
-      .sort('state');
+    const applications = await applicationModel.find({}).populate(['trip', 'explorer']).sort('state');
     res.json(applications);
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);

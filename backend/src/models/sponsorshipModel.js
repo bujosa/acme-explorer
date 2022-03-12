@@ -31,4 +31,4 @@ SponsorshipSchema.index({ sponsor: 1 });
 SponsorshipSchema.index({ trip: 1 });
 SponsorshipSchema.index({ state: 1 });
 
-export const sponsorshipModel = mongoose.model('Sponsorships', SponsorshipSchema);
+export const sponsorshipModel = mongoose.model('Sponsorship', SponsorshipSchema);
