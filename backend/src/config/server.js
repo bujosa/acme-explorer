@@ -12,6 +12,7 @@ import { redisConnection, redisClose } from './redis.js';
 import { dashboardRoutes } from '../routes/dashboardRoutes.js';
 import { StatusCodes } from 'http-status-codes';
 import { errorHandler } from '../shared/middlewares/error-handler.js';
+import { storageRoutes } from '../routes/storageRoutes.js';
 
 export class Server {
   constructor() {
@@ -37,6 +38,7 @@ export class Server {
     sponsorshipRoutes(this.app);
     tripRoutes(this.app);
     dashboardRoutes(this.app);
+    storageRoutes(this.app);
 
     this.app.use(errorHandler);
 

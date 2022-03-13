@@ -1,0 +1,21 @@
+  {
+    "example_collection": [
+      {
+        "_id": "5c6bc1af5f8ba61aa562218a",
+        "name": "Mercurio",
+        "satellite": 0,
+        "orbitalPeriod": 0.24,
+        "haveWater": true,
+        "picture": "https://cdn.pixabay.com/photo/2012/01/09/09/33/mercury-11591_960_720.png"
+      },
+      {
+        "_id": "5c6bc1af5f8ba61aa5622183",
+        "name": "Tierra",
+        "satellite": 1,
+        "orbitalPeriod": 1,
+        "haveWater": true,
+        "picture": "https://cdn.pixabay.com/photo/2011/12/13/14/28/earth-11009_960_720.jpg"
+      }
+    ]
+  }
+
