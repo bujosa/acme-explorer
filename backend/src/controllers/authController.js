@@ -20,6 +20,10 @@ export const verifyUser = (authorizedRoles) => {
   return (req, res, next) => {
     const idToken = req.headers.idtoken;
 
+    if (!idToken) {
+      return res.status(StatusCodes.UNAUTHORIZED).send({ message: 'No token provided' });
+    }
+
     admin
       .auth()
       .verifyIdToken(idToken)
@@ -27,11 +31,11 @@ export const verifyUser = (authorizedRoles) => {
         const uid = decodedToken.uid;
         actorModel.findOne({ email: uid }, (err, actor) => {
           if (err) {
-            res.send(err);
+            return res.send(err);
           }
 
           if (!actor) {
-            res.status(StatusCodes.UNAUTHORIZED).send({ message: 'forbidden', error: err });
+            return res.status(StatusCodes.UNAUTHORIZED).send({ message: 'forbidden', error: err });
           }
 
           const authorizedRolesSet = new Set(authorizedRoles);

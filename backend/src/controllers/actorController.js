@@ -125,14 +125,14 @@ export const login = async (req, res) => {
       // Make sure the password is correct
       actor.verifyPassword(password, async (err, isMatch) => {
         if (err) {
-          res.send(err);
+          return res.send(err);
         }
         if (!isMatch) {
-          res.status(StatusCodes.UNAUTHORIZED).send({ message: 'forbidden', error: err });
+          return res.status(StatusCodes.UNAUTHORIZED).send({ message: 'forbidden', error: err });
         }
         try {
           actor.customToken = await admin.auth().createCustomToken(actor.email);
-          res.json(actor);
+          return res.json(actor);
         } catch (error) {
           res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(error);
         }

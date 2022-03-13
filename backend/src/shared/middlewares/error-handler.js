@@ -7,6 +7,6 @@ export const errorHandler = (err, req, res, next) => {
   }
 
   res.status(StatusCodes.BAD_REQUEST).send({
-    errors: [{ message: 'Something went wrong ' }]
+    errors: [{ message: 'Something went wrong. ' + err.message }]
   });
 };

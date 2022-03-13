@@ -23,7 +23,7 @@ export class Server {
   constructor() {
     this.app = express();
     this.port = process.env.PORT || 8080;
-    this.serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+    this.serviceAccount = this.getServiceAccount();
 
     dbConnection();
     redisConnection();
@@ -71,5 +71,16 @@ export class Server {
     }
     await dbClose();
     await redisClose();
+  }
+
+  getServiceAccount(){
+    let account = {};
+    try{
+      account = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+    }catch(e){
+      throw new Error('Please review the firebase service account config. ' + e.message);
+    }
+
+    return account;
   }
 }
