@@ -1,3 +1,0 @@
-# Disallow indexing for all user agents
-User-agent: *
-Disallow:

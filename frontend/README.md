@@ -4,10 +4,13 @@
 
 * [![Build Status](https://github.com/acme-explorer/acme-explorer/workflows/CI%20Frontend/badge.svg)](https://github.com/acme-explorer/acme-explorer/actions)
 
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 6.2.4.
+
+
 ## System requirements
 
 * Node.js 16.0+
-* React 17.0+
+* Angular CLI 6.0+
 
 ## Dev Instructions
 
@@ -18,11 +21,11 @@
 2. Install project requirements in the project root directory.
 
    ```sh
-   npm install
+   npm install && npm install -g @angular/cli
    ```
 
 3. Start the dev web server
 
    ```sh
-   npm run dev
+   ng serve
    ```
