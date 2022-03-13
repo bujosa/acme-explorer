@@ -114,3 +114,6 @@ kubertenes/secret.yml
 
 # VSCode
 .vscode/
+
+# Firebase admin config
+firebase.config.json

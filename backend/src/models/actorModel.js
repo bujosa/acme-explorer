@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import moment from 'moment';
 import { BasicState, Roles, Languages } from '../shared/enums.js';
+import bcrypt from 'bcrypt';
 
 const { Schema } = mongoose;
 
@@ -16,9 +16,14 @@ const ActorSchema = new Schema(
     },
     email: {
       type: String,
-      required: 'You need to provide a email address',
+      required: 'You need to provide an email address',
       unique: true,
       match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
+    },
+    password: {
+      type: String,
+      minlength: 6,
+      required: 'You need to provide a password'
     },
     phoneNumber: { type: String, default: null },
     address: { type: String, default: null },
@@ -37,12 +42,62 @@ const ActorSchema = new Schema(
       enum: Object.values(BasicState),
       default: BasicState.ACTIVE
     },
-    createdAt: Number,
-    updatedAt: Number
+    customToken: {
+      type: String
+    },
+    idToken: {
+      type: String
+    }
   },
   {
-    timestamps: { currentTime: () => moment().unix() }
+    timestamps: true
   }
 );
+
+ActorSchema.set('toJSON', {
+  transform: function(doc, ret) {
+    ret.id = ret._id;
+    delete ret._id;
+    delete ret.password;
+    delete ret.__v;
+  }
+});
+
+ActorSchema.pre('save', function(next) {
+  const actor = this;
+
+  bcrypt.genSalt(6, (err, salt) => {
+    if (err) return next(err);
+
+    bcrypt.hash(actor.password, salt, (err, hash) => {
+      if (err) return next(err);
+      actor.password = hash;
+      next();
+    });
+  });
+});
+
+ActorSchema.pre('findOneAndUpdate', function(next) {
+  const actor = this._update;
+
+  if (!actor.password) return next();
+
+  bcrypt.genSalt(6, (err, salt) => {
+    if (err) return next(err);
+
+    bcrypt.hash(actor.password, salt, (err, hash) => {
+      if (err) return next(err);
+      actor.password = hash;
+      next();
+    });
+  });
+});
+
+ActorSchema.methods.verifyPassword = function(password, cb) {
+  bcrypt.compare(password, this.password, function(err, isMatch) {
+    if (err) return cb(err);
+    cb(null, isMatch);
+  });
+};
 
 export const actorModel = mongoose.model('Actor', ActorSchema);

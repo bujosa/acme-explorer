@@ -5,8 +5,12 @@ import {
   updateActor,
   deleteActor,
   banActor,
-  unbanActor
+  unbanActor,
+  self
 } from '../controllers/actorController.js';
+import { verifyUser } from '../controllers/authController.js';
+import { Roles } from '../shared/enums.js';
+import { ALL_ROLES } from '../shared/auth/authorized-roles.arrays.js';
 
 export const actorRoutes = (app) => {
   /**
@@ -48,7 +52,7 @@ export const actorRoutes = (app) => {
    *              schema:
    *                $ref: '#/components/schemas/actor'
    */
-  app.route('/v1/actors').get(findActors).post(createActor);
+  app.route('/v1/actors').get(verifyUser([Roles.ADMIN]), findActors).post(verifyUser([Roles.ADMIN]), createActor);
 
   /**
    * @openapi
@@ -112,7 +116,8 @@ export const actorRoutes = (app) => {
    *       404:
    *         description: The actor was not found
    */
-  app.route('/v1/actors/:actorId').get(findActor).put(updateActor).delete(deleteActor);
+  app.route('/v1/actors/:actorId').get(verifyUser([Roles.ADMIN]), findActor).put(verifyUser(ALL_ROLES), updateActor)
+  .delete(verifyUser([Roles.ADMIN]), deleteActor);
 
   /**
    * @openapi
@@ -133,7 +138,7 @@ export const actorRoutes = (app) => {
    *             schema:
    *               $ref: '#/components/schemas/actors'
    */
-  app.route('/v1/actors/:actorId/ban').patch(banActor);
+  app.route('/v1/actors/:actorId/ban').patch(verifyUser([Roles.ADMIN]), banActor);
 
   /**
    * @openapi
@@ -154,5 +159,23 @@ export const actorRoutes = (app) => {
    *             schema:
    *               $ref: '#/components/schemas/actors'
    */
-  app.route('/v1/actors/:actorId/unban').patch(unbanActor);
+  app.route('/v1/actors/:actorId/unban').patch(verifyUser([Roles.ADMIN]), unbanActor);
+
+  /**
+   * @openapi
+   * /v1/self:
+   *   get:
+   *     description: Get current actor
+   *     tags: [Actors]
+   *     responses:
+   *       200:
+   *         description: Return current user
+   *         content:
+   *           application/json:
+   *            schema:
+   *              $ref: '#/components/schemas/actor'
+   *       404:
+   *         description: The actor was not found
+   */
+  app.route('/v1/self').get(verifyUser(ALL_ROLES), self);
 };

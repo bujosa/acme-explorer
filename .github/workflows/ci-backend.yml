@@ -19,6 +19,7 @@ env:
   DB_URI: ${{ secrets.DB_URI }}
   REDIS_URI: ${{ secrets.REDIS_URI }}
   SECRET: ${{ secrets.JWT_SECRET }}
+  GOOGLE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT}}
 
 defaults:
   run:
