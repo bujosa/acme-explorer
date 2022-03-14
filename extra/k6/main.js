@@ -14,7 +14,7 @@ export const options = {
 };
 
 export default function () {
-  const url = `${__ENV.HOSTNAME}/v1/finders`;
+  const url = `${__ENV.HOSTNAME}/v1/trips`;
 
   const params = {
     headers: {

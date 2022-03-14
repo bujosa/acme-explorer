@@ -17,7 +17,7 @@ export class ActorService {
   }
 
   updateProfile(actor: Actor) {
-    const url = `${this.backendApiBaseURL}/v2/actors/${actor._id}`;
+    const url = `${this.backendApiBaseURL}/v1/actors/${actor.id}`;
 
     const putActor = JSON.parse(JSON.stringify(actor));
     delete putActor.idToken;
