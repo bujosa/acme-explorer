@@ -10,8 +10,16 @@ const options = {
       description: 'App that manages custom trips for explorers.'
     },
     components: {
-      schemas: swaggerSchemas
-    }
+      schemas: swaggerSchemas,
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT"
+        }
+      }
+    },
+    security: [{bearerAuth: []}]
   },
   apis: ['./src/routes/*.js']
 };

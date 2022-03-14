@@ -14,6 +14,7 @@ export const registerRoutes = (app) => {
    *   post:
    *      description: Create a new actors
    *      tags: [Register]
+   *      security: []
    *      requestBody:
    *        required: true
    *        content:

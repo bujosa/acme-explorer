@@ -14,6 +14,7 @@ export const loginRoutes = (app) => {
    *   get:
    *     description: Return an actor with a token
    *     tags: [Login]
+   *     security: []
    *     parameters:
    *       - name: email
    *         type: string

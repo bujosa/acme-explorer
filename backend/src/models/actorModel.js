@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { BasicState, Roles, Languages } from '../shared/enums.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 const { Schema } = mongoose;
 
