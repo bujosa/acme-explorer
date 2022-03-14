@@ -39,3 +39,6 @@
    docker-compose up backend
    ```
 
+## Documentation
+
+   You can access the API documentation, generated with Swagger, on: `http://localhost:3000/docs/`.
