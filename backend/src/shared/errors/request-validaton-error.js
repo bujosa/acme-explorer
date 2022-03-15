@@ -10,7 +10,7 @@ export class RequestValidationError extends BaseError {
   }
 
   toClient() {
-    return this.errors.map((err) => {
+    return this.errors.map(err => {
       return { message: err.msg, field: err.param };
     });
   }

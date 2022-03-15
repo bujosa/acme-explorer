@@ -50,27 +50,26 @@ export const updateActor = async (req, res) => {
 
     if (!actor) {
       res.status(StatusCodes.UNAUTHORIZED).send('Not authorized');
-    } 
-    else if (actor.role === Roles.ADMIN || actor.id === req.params.actorId) {
+    } else if (actor.role === Roles.ADMIN || actor.id === req.params.actorId) {
       const result = await actorModel.findOneAndUpdate({ _id: req.params.actorId }, req.body, { new: true });
       res.json(result);
     } else {
       res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation');
     }
   } catch (err) {
-    if (err.name === 'ValidationError'){
+    if (err.name === 'ValidationError') {
       res.status(StatusCodes.UNPROCESSABLE_ENTITY).send(err);
     } else {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(err);
-    } 
+    }
   }
 };
 
 export const deleteActor = async (req, res) => {
-  try{
+  try {
     await actorModel.deleteOne({ _id: req.params.actorId });
     res.status(StatusCodes.NO_CONTENT);
-  } catch(err) {
+  } catch (err) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(err);
   }
 };
@@ -120,7 +119,7 @@ export const login = async (req, res) => {
     if (err) {
       res.send(err);
     } else if (!actor) {
-      res.status(StatusCodes.UNAUTHORIZED).send({ message: 'User email doesn\'t exist'});
+      res.status(StatusCodes.UNAUTHORIZED).send({ message: "User email doesn't exist" });
     } else {
       // Make sure the password is correct
       actor.verifyPassword(password, async (err, isMatch) => {
@@ -128,7 +127,7 @@ export const login = async (req, res) => {
           return res.send(err);
         }
         if (!isMatch) {
-          return res.status(StatusCodes.UNAUTHORIZED).send({ message: 'Password is incorrect. Please review'});
+          return res.status(StatusCodes.UNAUTHORIZED).send({ message: 'Password is incorrect. Please review' });
         }
         try {
           actor.customToken = await admin.auth().createCustomToken(actor.email);

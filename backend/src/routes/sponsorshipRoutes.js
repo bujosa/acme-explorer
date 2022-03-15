@@ -7,7 +7,7 @@ import {
   paySponsorship
 } from '../controllers/sponsorshipController.js';
 
-export const sponsorshipRoutes = (app) => {
+export const sponsorshipRoutes = app => {
   /**
    * @openapi
    * tags:
@@ -47,7 +47,10 @@ export const sponsorshipRoutes = (app) => {
    *              schema:
    *                $ref: '#/components/schemas/sponsorship'
    */
-  app.route('/v1/sponsorships').get(findAllSponsorships).post(createSponsorship);
+  app
+    .route('/v1/sponsorships')
+    .get(findAllSponsorships)
+    .post(createSponsorship);
 
   /**
    * @openapi
@@ -111,7 +114,11 @@ export const sponsorshipRoutes = (app) => {
    *       404:
    *         description: The sponsorship was not found
    */
-  app.route('/v1/sponsorships/:sponsorshipId').get(findSponsorship).put(updateSponsorship).delete(deleteSponsorship);
+  app
+    .route('/v1/sponsorships/:sponsorshipId')
+    .get(findSponsorship)
+    .put(updateSponsorship)
+    .delete(deleteSponsorship);
 
   /**
    * @openapi

@@ -74,11 +74,11 @@ export class Server {
     await redisClose();
   }
 
-  getServiceAccount(){
+  getServiceAccount() {
     let account = {};
-    try{
+    try {
       account = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
-    }catch(e){
+    } catch (e) {
       throw new Error('Please review the firebase service account config. ' + e.message);
     }
 
@@ -97,11 +97,10 @@ export class Server {
           token: customToken,
           returnSecureToken: true
         },
-        json: true,
+        json: true
       });
 
       return res.data.idToken;
-
     } catch (err) {
       console.error(err);
     }

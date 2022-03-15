@@ -15,4 +15,4 @@ export const loginPayload = {
       type: 'string'
     }
   }
-}
+};

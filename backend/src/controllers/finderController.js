@@ -14,7 +14,7 @@ export const findFinders = async (req, res) => {
   page = Math.max(0, page ?? 0);
 
   if (actor.isExplorer()) {
-      query.actor = actor._id;
+    query.actor = actor._id;
   }
 
   try {
@@ -50,7 +50,7 @@ export const findFinder = async (req, res, next) => {
 };
 
 export const createFinder = async (req, res) => {
-  const newFinder = new finderModel({ actor: res.locals.actor._id, ...req.body});
+  const newFinder = new finderModel({ actor: res.locals.actor._id, ...req.body });
 
   try {
     const finder = await newFinder.save();
@@ -110,7 +110,10 @@ export const findFinderTrips = async (req, res, next) => {
       const redisConfig = await configurationModel.getRedisConfig();
       const $query = tripModel.getFinderQuery(query);
 
-      result = await tripModel.find($query).populate('manager').limit(redisConfig.maxResultsFinder || Constants.maxResultsFinder);
+      result = await tripModel
+        .find($query)
+        .populate('manager')
+        .limit(redisConfig.maxResultsFinder || Constants.maxResultsFinder);
       result = result.map(_ => _.cleanup());
       if (result) {
         await redis.set(key, JSON.stringify(result), {

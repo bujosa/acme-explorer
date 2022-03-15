@@ -127,7 +127,7 @@ TripSchema.index({
 
 TripSchema.statics.getFinderQuery = function(query) {
   return {
-    ...(query.keyword ? { $text : { $search: query.keyword } } : {}),
+    ...(query.keyword ? { $text: { $search: query.keyword } } : {}),
     ...(query.minPrice || query.maxPrice
       ? {
           price: {
@@ -179,7 +179,7 @@ TripSchema.pre('save', function(callback) {
   // Total price
   const initialValue = 0;
   const totalPrice = this.stages
-    .map((e) => {
+    .map(e => {
       return e.price;
     })
     .reduce((previousValue, currentValue) => previousValue + currentValue, initialValue);
@@ -197,7 +197,7 @@ TripSchema.pre('findOneAndUpdate', function(next) {
     const newTrip = this._update.$set;
     const initialValue = 0;
     const totalPrice = this._update.$set.stages
-      .map((e) => {
+      .map(e => {
         return e.price;
       })
       .reduce((previousValue, currentValue) => previousValue + currentValue, initialValue);

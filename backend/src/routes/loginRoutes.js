@@ -1,6 +1,6 @@
 import { login } from '../controllers/actorController.js';
 
-export const loginRoutes = (app) => {
+export const loginRoutes = app => {
   /**
    * @openapi
    * tags:

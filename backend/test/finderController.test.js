@@ -16,15 +16,17 @@ describe('Finder API endpoints', () => {
       surname: 'surname',
       email: 'test.explorer@gmail.com',
       password: 'abc123'
-    }
+    };
     finderTest = {
       name: 'test.search.base',
       actor: '6214cd93448c720973ba9623',
       minPrice: 100,
       maxPrice: 300
     };
-    token = await agent.post('/v1/register').send(explorerTest)
-        .then(_ => Server.createIdTokenFromCustomToken(_.body.email));
+    token = await agent
+      .post('/v1/register')
+      .send(explorerTest)
+      .then(_ => Server.createIdTokenFromCustomToken(_.body.email));
     return initTestDatabase(finderTest);
   });
 
@@ -48,7 +50,10 @@ describe('Finder API endpoints', () => {
         maxPrice: 300
       };
 
-      const response = await agent.set('idtoken', token).post(base).send(payload);
+      const response = await agent
+        .set('idtoken', token)
+        .post(base)
+        .send(payload);
       const finder = await finderModel.findOne({ name: payload.name });
       expect(response.statusCode).toBe(StatusCodes.CREATED);
       expect(finder).not.toBeNull();
@@ -70,7 +75,10 @@ describe('Finder API endpoints', () => {
 
     test('should update an existing finder for an user', async () => {
       const finder = await finderModel.findOne({ name: finderTest.name });
-      const response = await agent.set('idtoken', token).patch(`${base}/${finder._id}`).send({ maxPrice: 400 });
+      const response = await agent
+        .set('idtoken', token)
+        .patch(`${base}/${finder._id}`)
+        .send({ maxPrice: 400 });
       expect(response.statusCode).toBe(StatusCodes.OK);
       expect(response.body).toBeInstanceOf(Object);
       expect(response.body.maxPrice).toBe(400);
@@ -84,7 +92,7 @@ describe('Finder API endpoints', () => {
   });
 });
 
-const initTestDatabase = async (finderTest) => {
+const initTestDatabase = async finderTest => {
   await finderModel.insertMany([finderTest]);
 };
 

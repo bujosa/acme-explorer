@@ -28,7 +28,7 @@ export const findMyTrips = (req, res) => {
         res.status(500).send(err);
       } else {
         res.json(
-          trips.map((trip) => {
+          trips.map(trip => {
             return trip.cleanup();
           })
         );
@@ -52,9 +52,9 @@ export const findTrips = async (req, res) => {
   };
   let projection = {};
 
-  if(keyword) {
+  if (keyword) {
     $sort.score = { $meta: 'textScore' };
-    projection =  { score : { $meta: 'textScore' } };
+    projection = { score: { $meta: 'textScore' } };
   }
 
   try {
@@ -150,18 +150,16 @@ export const updateTrip = (req, res) => {
         }
       }
 
-      tripModel.findOneAndUpdate(
-        { _id: req.params.tripId },
-        update,
-        { new: true, runValidators: true },
-        function(err, trip) {
-          if (err) {
-            res.status(500).send(err);
-          } else {
-            res.json(trip.cleanup());
-          }
+      tripModel.findOneAndUpdate({ _id: req.params.tripId }, update, { new: true, runValidators: true }, function(
+        err,
+        trip
+      ) {
+        if (err) {
+          res.status(500).send(err);
+        } else {
+          res.json(trip.cleanup());
         }
-      );
+      });
     } else {
       res.status(404).send({ error: 'Trip not found' });
     }

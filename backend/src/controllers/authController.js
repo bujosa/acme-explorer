@@ -2,7 +2,7 @@ import admin from 'firebase-admin';
 import { actorModel } from '../models/actorModel.js';
 import { StatusCodes } from 'http-status-codes';
 
-export const currentUser = async (idToken) => {
+export const currentUser = async idToken => {
   const actorFromFB = await admin.auth().verifyIdToken(idToken);
 
   const uid = actorFromFB.uid;
@@ -16,7 +16,7 @@ export const currentUser = async (idToken) => {
   return actor;
 };
 
-export const verifyUser = (authorizedRoles) => {
+export const verifyUser = authorizedRoles => {
   return (req, res, next) => {
     const idToken = req.headers.idtoken;
 
@@ -27,7 +27,7 @@ export const verifyUser = (authorizedRoles) => {
     admin
       .auth()
       .verifyIdToken(idToken)
-      .then((decodedToken) => {
+      .then(decodedToken => {
         const uid = decodedToken.uid;
         actorModel.findOne({ email: uid }, (err, actor) => {
           if (err) {
@@ -49,7 +49,7 @@ export const verifyUser = (authorizedRoles) => {
           res.status(StatusCodes.FORBIDDEN).send({ message: 'forbidden', error: err });
         });
       })
-      .catch((err) => {
+      .catch(err => {
         res.status(StatusCodes.FORBIDDEN).send({ message: 'forbidden', error: err });
       });
   };

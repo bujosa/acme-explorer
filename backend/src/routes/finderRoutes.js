@@ -6,10 +6,10 @@ import {
   updateFinder,
   deleteFinder
 } from '../controllers/finderController.js';
-import {verifyUser} from '../controllers/authController.js';
-import {Roles} from '../shared/enums.js';
+import { verifyUser } from '../controllers/authController.js';
+import { Roles } from '../shared/enums.js';
 
-export const finderRoutes = (app) => {
+export const finderRoutes = app => {
   const auth = verifyUser([Roles.ADMIN, Roles.EXPLORER, Roles.MANAGER, Roles.SPONSOR]);
 
   /**
@@ -51,7 +51,10 @@ export const finderRoutes = (app) => {
    *              schema:
    *                $ref: '#/components/schemas/finder'
    */
-  app.route('/v1/finders').get(auth, findFinders).post(auth, createFinder);
+  app
+    .route('/v1/finders')
+    .get(auth, findFinders)
+    .post(auth, createFinder);
 
   /**
    * @openapi
@@ -115,7 +118,11 @@ export const finderRoutes = (app) => {
    *       404:
    *         description: The finder was not found
    */
-  app.route('/v1/finders/:finderId').get(auth, findFinder).patch(auth, updateFinder).delete(auth, deleteFinder);
+  app
+    .route('/v1/finders/:finderId')
+    .get(auth, findFinder)
+    .patch(auth, updateFinder)
+    .delete(auth, deleteFinder);
 
   /**
    * @openapi

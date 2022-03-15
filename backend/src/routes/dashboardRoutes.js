@@ -6,7 +6,7 @@ import {
   getRatioOfApplications
 } from '../controllers/dashboardController.js';
 
-export const dashboardRoutes = (app) => {
+export const dashboardRoutes = app => {
   /**
    * @openapi
    * tags:
