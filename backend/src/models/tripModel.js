@@ -107,7 +107,6 @@ const TripSchema = new Schema({
 // Create a text index for ticker, title and description with weights 10, 5 and 2
 TripSchema.index(
   {
-    state: 1,
     ticker: 'text',
     title: 'text',
     description: 'text'
@@ -125,6 +124,22 @@ TripSchema.index(
 TripSchema.index({
   managerId: 1
 });
+
+TripSchema.statics.getFinderQuery = function(query) {
+  return {
+    ...(query.keyword ? { $text: { $search: query.keyword } } : {}),
+    ...(query.minPrice || query.maxPrice
+      ? {
+          price: {
+            $gte: query.minPrice || 0,
+            $lte: query.maxPrice || Constants.maxPrice
+          }
+        }
+      : {}),
+    ...(query.startDate ? { startDate: query.startDate } : {}),
+    ...(query.endDate ? { endDate: query.endDate } : {})
+  };
+};
 
 // Cleanup method
 TripSchema.methods.cleanup = function() {
@@ -164,7 +179,7 @@ TripSchema.pre('save', function(callback) {
   // Total price
   const initialValue = 0;
   const totalPrice = this.stages
-    .map((e) => {
+    .map(e => {
       return e.price;
     })
     .reduce((previousValue, currentValue) => previousValue + currentValue, initialValue);
@@ -182,7 +197,7 @@ TripSchema.pre('findOneAndUpdate', function(next) {
     const newTrip = this._update.$set;
     const initialValue = 0;
     const totalPrice = this._update.$set.stages
-      .map((e) => {
+      .map(e => {
         return e.price;
       })
       .reduce((previousValue, currentValue) => previousValue + currentValue, initialValue);

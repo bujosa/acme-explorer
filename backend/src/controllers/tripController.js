@@ -1,4 +1,6 @@
 import { tripModel } from '../models/tripModel.js';
+import Constants from '../shared/constants.js';
+import { StatusCodes } from 'http-status-codes';
 
 // Find one trip by id
 // TODO: If trip is INACTIVE, only its owner (manager) can see it
@@ -26,7 +28,7 @@ export const findMyTrips = (req, res) => {
         res.status(500).send(err);
       } else {
         res.json(
-          trips.map((trip) => {
+          trips.map(trip => {
             return trip.cleanup();
           })
         );
@@ -35,33 +37,44 @@ export const findMyTrips = (req, res) => {
   );
 };
 
-export const findTrips = (req, res) => {
+export const findTrips = async (req, res) => {
   // If no keyword is provided, return all trips with state=Active or state=cancelled
-  const keyword = req.query.keyword;
+  let { perPage, page, sort, keyword, ...rest } = req.query;
+  const [field, sortType] = sort ? sort.split(',') : Constants.defaultSort;
+  const $sort = { [field]: sortType };
+  perPage = perPage ? parseInt(perPage) : Constants.defaultPerPage;
+  page = Math.max(0, page ?? 0);
 
   let query = {
-    $or: [{ state: 'ACTIVE' }, { state: 'CANCELLED' }]
+    $or: [{ state: 'ACTIVE' }, { state: 'CANCELLED' }],
+    ...rest,
+    ...tripModel.getFinderQuery(req.query)
   };
+  let projection = {};
 
-  let sort = null;
-  // if keyword is not null, undefined or empty
-  if (keyword !== null && keyword !== undefined && keyword !== '') {
-    query.$text = { $search: keyword };
-    query.score = { $meta: 'textScore' };
-    sort = { sort: { score: { $meta: 'textScore' } } };
+  if (keyword) {
+    $sort.score = { $meta: 'textScore' };
+    projection = { score: { $meta: 'textScore' } };
   }
 
-  tripModel.find(query, sort, (err, trips) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.json(
-        trips.map((trip) => {
-          return trip.cleanup();
-        })
-      );
-    }
-  });
+  try {
+    const trips = await tripModel
+      .find(query, projection)
+      .populate('manager')
+      .skip(perPage * page)
+      .limit(perPage)
+      .sort($sort)
+      .exec();
+
+    const count = await tripModel.countDocuments();
+    res.json({
+      records: trips.map(trip => trip.cleanup()),
+      page: page,
+      pages: count / perPage
+    });
+  } catch (e) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(e.message);
+  }
 };
 
 export const createTrip = (req, res) => {
@@ -137,18 +150,16 @@ export const updateTrip = (req, res) => {
         }
       }
 
-      tripModel.findOneAndUpdate(
-        { _id: req.params.tripId },
-        update,
-        { new: true, runValidators: true },
-        function(err, trip) {
-          if (err) {
-            res.status(500).send(err);
-          } else {
-            res.json(trip.cleanup());
-          }
+      tripModel.findOneAndUpdate({ _id: req.params.tripId }, update, { new: true, runValidators: true }, function(
+        err,
+        trip
+      ) {
+        if (err) {
+          res.status(500).send(err);
+        } else {
+          res.json(trip.cleanup());
         }
-      );
+      });
     } else {
       res.status(404).send({ error: 'Trip not found' });
     }

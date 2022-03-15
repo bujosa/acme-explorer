@@ -20,6 +20,7 @@ env:
   REDIS_URI: ${{ secrets.REDIS_URI }}
   SECRET: ${{ secrets.JWT_SECRET }}
   GOOGLE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT}}
+  FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY}}
 
 defaults:
   run:

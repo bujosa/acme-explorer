@@ -1,13 +1,6 @@
-import {
-  findTrips,
-  createTrip,
-  findTrip,
-  updateTrip,
-  deleteTrip,
-  findMyTrips
-} from '../controllers/tripController.js';
+import { findTrips, createTrip, findTrip, updateTrip, deleteTrip, findMyTrips } from '../controllers/tripController.js';
 
-export const tripRoutes = (app) => {
+export const tripRoutes = app => {
   /**
    * @openapi
    * tags:
@@ -47,7 +40,10 @@ export const tripRoutes = (app) => {
    *              schema:
    *                $ref: '#/components/schemas/trip'
    */
-  app.route('/v1/trips').get(findTrips).post(createTrip);
+  app
+    .route('/v1/trips')
+    .get(findTrips)
+    .post(createTrip);
 
   /**
    * @openapi
@@ -111,7 +107,11 @@ export const tripRoutes = (app) => {
    *       404:
    *         description: The trip was not found
    */
-  app.route('/v1/trips/:tripId').get(findTrip).put(updateTrip).delete(deleteTrip);
+  app
+    .route('/v1/trips/:tripId')
+    .get(findTrip)
+    .put(updateTrip)
+    .delete(deleteTrip);
 
   /**
    * @section trips

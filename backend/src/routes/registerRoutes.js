@@ -1,6 +1,6 @@
 import { register } from '../controllers/actorController.js';
 
-export const registerRoutes = (app) => {
+export const registerRoutes = app => {
   /**
    * @openapi
    * tags:

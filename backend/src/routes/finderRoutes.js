@@ -1,13 +1,17 @@
 import {
-  findAllFinders,
+  findFinders,
   findFinderTrips,
   createFinder,
   findFinder,
   updateFinder,
   deleteFinder
 } from '../controllers/finderController.js';
+import { verifyUser } from '../controllers/authController.js';
+import { Roles } from '../shared/enums.js';
 
-export const finderRoutes = (app) => {
+export const finderRoutes = app => {
+  const auth = verifyUser([Roles.ADMIN, Roles.EXPLORER, Roles.MANAGER, Roles.SPONSOR]);
+
   /**
    * @openapi
    * tags:
@@ -47,7 +51,10 @@ export const finderRoutes = (app) => {
    *              schema:
    *                $ref: '#/components/schemas/finder'
    */
-  app.route('/v1/finders').get(findAllFinders).post(createFinder);
+  app
+    .route('/v1/finders')
+    .get(auth, findFinders)
+    .post(auth, createFinder);
 
   /**
    * @openapi
@@ -111,7 +118,11 @@ export const finderRoutes = (app) => {
    *       404:
    *         description: The finder was not found
    */
-  app.route('/v1/finders/:finderId').get(findFinder).patch(updateFinder).delete(deleteFinder);
+  app
+    .route('/v1/finders/:finderId')
+    .get(auth, findFinder)
+    .patch(auth, updateFinder)
+    .delete(auth, deleteFinder);
 
   /**
    * @openapi
@@ -129,5 +140,5 @@ export const finderRoutes = (app) => {
    *              items:
    *                $ref: '#/components/schemas/finder'
    */
-  app.route('/v1/finders/:finderId/trips').get(findFinderTrips);
+  app.route('/v1/finders/:finderId/trips').get(auth, findFinderTrips);
 };

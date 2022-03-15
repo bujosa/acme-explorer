@@ -117,3 +117,6 @@ kubertenes/secret.yml
 
 # Firebase admin config
 firebase.config.json
+
+# Kube secrets
+secret.yml

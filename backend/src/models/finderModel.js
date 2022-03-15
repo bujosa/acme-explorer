@@ -50,4 +50,14 @@ const FinderSchema = new Schema(
   }
 );
 
+FinderSchema.methods.toRedis = function() {
+  return {
+    keyword: this.keyword,
+    minPrice: this.minPrice,
+    maxPrice: this.maxPrice,
+    startDate: this.startDate,
+    endDate: this.endDate
+  };
+};
+
 export const finderModel = mongoose.model('Finder', FinderSchema);

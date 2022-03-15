@@ -54,6 +54,14 @@ const ActorSchema = new Schema(
   }
 );
 
+ActorSchema.methods.isActive = function() {
+  return this.state === BasicState.ACTIVE;
+};
+
+ActorSchema.methods.isExplorer = function() {
+  return this.role === Roles.EXPLORER;
+};
+
 ActorSchema.set('toJSON', {
   transform: function(doc, ret) {
     ret.id = ret._id;

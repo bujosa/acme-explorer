@@ -10,7 +10,7 @@ import {
   rejectApplication
 } from '../controllers/applicationController.js';
 
-export const applicationRoutes = (app) => {
+export const applicationRoutes = app => {
   /**
    * @openapi
    * tags:
@@ -50,7 +50,10 @@ export const applicationRoutes = (app) => {
    *              schema:
    *                $ref: '#/components/schemas/application'
    */
-  app.route('/v1/applications').get(findAllApplications).post(createApplication);
+  app
+    .route('/v1/applications')
+    .get(findAllApplications)
+    .post(createApplication);
 
   /**
    * @openapi
@@ -114,7 +117,11 @@ export const applicationRoutes = (app) => {
    *       404:
    *         description: The application was not found
    */
-  app.route('/v1/applications/:applicationId').get(findApplication).put(updateApplication).delete(deleteApplication);
+  app
+    .route('/v1/applications/:applicationId')
+    .get(findApplication)
+    .put(updateApplication)
+    .delete(deleteApplication);
 
   /**
    * @openapi

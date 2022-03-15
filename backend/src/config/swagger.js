@@ -13,13 +13,13 @@ const options = {
       schemas: swaggerSchemas,
       securitySchemes: {
         bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT"
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
         }
       }
     },
-    security: [{bearerAuth: []}]
+    security: [{ bearerAuth: [] }]
   },
   apis: ['./src/routes/*.js']
 };
