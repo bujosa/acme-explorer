@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: acme-db-pvc
+  namespace: 0aps
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: acme-db-deployment
+  namespace: 0aps
+spec:
+  selector:
+    matchLabels:
+      app: acme-db
+  template:
+    metadata:
+      labels:
+        app: acme-db
+    spec:
+      containers:
+        - name: acme-db
+          image: mongo
+          ports:
+            - containerPort: 27017
+              protocol: TCP
+          volumeMounts:
+            - name: storage
+              mountPath: /data/db
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: acme-db-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: acme-db-service
+  namespace: 0aps
+spec:
+  selector:
+    app: acme-db
+  ports:
+    - port: 27017
+      targetPort: 27017

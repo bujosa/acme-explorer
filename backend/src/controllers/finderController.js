@@ -6,11 +6,16 @@ import { configurationModel } from '../models/configurationModel.js';
 import { RecordNotFound } from '../shared/exceptions.js';
 import { redis } from '../config/redis.js';
 
-export const findAllFinders = async (req, res) => {
+export const findFinders = async (req, res) => {
+  const { actor } = res.locals;
   let { perPage, page, sort, ...query } = req.query;
   const [field, sortType] = sort ? sort.split(',') : Constants.defaultSort;
   perPage = perPage ? parseInt(perPage) : Constants.defaultPerPage;
   page = Math.max(0, page ?? 0);
+
+  if (actor.isExplorer()) {
+      query.actor = actor._id;
+  }
 
   try {
     const records = await finderModel
@@ -45,7 +50,7 @@ export const findFinder = async (req, res, next) => {
 };
 
 export const createFinder = async (req, res) => {
-  const newFinder = new finderModel(req.body);
+  const newFinder = new finderModel({ actor: res.locals.actor._id, ...req.body});
 
   try {
     const finder = await newFinder.save();
@@ -93,30 +98,20 @@ export const findFinderTrips = async (req, res, next) => {
       return next(new RecordNotFound());
     }
 
-    const query = record.toJSON();
+    const query = record.toRedis();
     const key = JSON.stringify(query);
 
     const cacheValue = await redis.get(key);
+
     let result;
     if (cacheValue) {
       result = JSON.parse(cacheValue);
     } else {
       const redisConfig = await configurationModel.getRedisConfig();
-      const $query = {
-        ...(query.keyword ? { $or: [{ title: query.keyword }, { description: query.keyword }] } : {}),
-        ...(query.minPrice || query.maxPrice
-          ? {
-              price: {
-                $gte: query.minPrice || 0,
-                $lte: query.maxPrice || Constants.maxPrice
-              }
-            }
-          : {}),
-        ...(query.startDate ? { startDate: query.startDate } : {}),
-        ...(query.endDate ? { endDate: query.endDate } : {})
-      };
+      const $query = tripModel.getFinderQuery(query);
 
-      result = await tripModel.find($query).limit(redisConfig.maxResultsFinder || Constants.maxResultsFinder);
+      result = await tripModel.find($query).populate('manager').limit(redisConfig.maxResultsFinder || Constants.maxResultsFinder);
+      result = result.map(_ => _.cleanup());
       if (result) {
         await redis.set(key, JSON.stringify(result), {
           EX: redisConfig.timeCachedFinder || Constants.timeCachedFinder

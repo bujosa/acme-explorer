@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: acme-deployment
+  namespace: 0aps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: acme
+  template:
+    metadata:
+      labels:
+        app: acme
+    spec:
+      containers:
+        - name: acme
+          image: ghcr.io/0aps/acme-backend
+          env:
+            - name: NAME
+              value: 'acme-explorer'
+            - name: PORT
+              value: '3000'
+            - name: SERVER_TIMEOUT
+              value: '20000'
+            - name: DB_URI
+              value: 'mongodb://acme-db-service:27017/acme?retryWrites=true&w=majority'
+            - name: REDIS_URI
+              value: 'redis://redis-service:6379'
+            - name: GOOGLE_SERVICE_ACCOUNT
+              valueFrom:
+                secretKeyRef:
+                  name: acme-secret
+                  key: GOOGLE_SERVICE_ACCOUNT
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: acme-service
+  namespace: 0aps
+spec:
+  selector:
+    app: acme
+  ports:
+    - name: acme
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

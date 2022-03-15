@@ -1,20 +1,30 @@
 import request from 'supertest';
 import { StatusCodes } from 'http-status-codes';
 import { finderModel } from '../src/models/finderModel.js';
+import { actorModel } from '../src/models/actorModel.js';
+import { Server } from '../src/config/server.js';
 import server from '../src/app.js';
 
 describe('Finder API endpoints', () => {
   const base = '/v1/finders';
-  let agent, finderTest;
+  let agent, explorerTest, finderTest, token;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     agent = request.agent(server.instance);
+    explorerTest = {
+      name: 'test',
+      surname: 'surname',
+      email: 'test.explorer@gmail.com',
+      password: 'abc123'
+    }
     finderTest = {
       name: 'test.search.base',
       actor: '6214cd93448c720973ba9623',
       minPrice: 100,
       maxPrice: 300
     };
+    token = await agent.post('/v1/register').send(explorerTest)
+        .then(_ => Server.createIdTokenFromCustomToken(_.body.email));
     return initTestDatabase(finderTest);
   });
 
@@ -25,7 +35,7 @@ describe('Finder API endpoints', () => {
 
   describe('Finders endpoints', () => {
     test('should return the list of finders for an user', async () => {
-      const response = await agent.get(base);
+      const response = await agent.set('idtoken', token).get(base);
       expect(response.statusCode).toBe(StatusCodes.OK);
       expect(response.body).toBeInstanceOf(Object);
     });
@@ -38,7 +48,7 @@ describe('Finder API endpoints', () => {
         maxPrice: 300
       };
 
-      const response = await agent.post(base).send(payload);
+      const response = await agent.set('idtoken', token).post(base).send(payload);
       const finder = await finderModel.findOne({ name: payload.name });
       expect(response.statusCode).toBe(StatusCodes.CREATED);
       expect(finder).not.toBeNull();
@@ -46,21 +56,21 @@ describe('Finder API endpoints', () => {
 
     test('should return an existing finder', async () => {
       const finder = await finderModel.findOne({ name: finderTest.name });
-      const response = await agent.get(`${base}/${finder._id}`);
+      const response = await agent.set('idtoken', token).get(`${base}/${finder._id}`);
       expect(response.statusCode).toBe(StatusCodes.OK);
       expect(response.body).toBeInstanceOf(Object);
     });
 
     test('should return the list of trips in a finder', async () => {
       const finder = await finderModel.findOne({ name: finderTest.name });
-      const response = await agent.get(`${base}/${finder._id}/trips`);
+      const response = await agent.set('idtoken', token).get(`${base}/${finder._id}/trips`);
       expect(response.statusCode).toBe(StatusCodes.OK);
       expect(response.body).toBeInstanceOf(Array);
     });
 
     test('should update an existing finder for an user', async () => {
       const finder = await finderModel.findOne({ name: finderTest.name });
-      const response = await agent.patch(`${base}/${finder._id}`).send({ maxPrice: 400 });
+      const response = await agent.set('idtoken', token).patch(`${base}/${finder._id}`).send({ maxPrice: 400 });
       expect(response.statusCode).toBe(StatusCodes.OK);
       expect(response.body).toBeInstanceOf(Object);
       expect(response.body.maxPrice).toBe(400);
@@ -68,7 +78,7 @@ describe('Finder API endpoints', () => {
 
     test('should delete an existing finder for an user', async () => {
       const finder = await finderModel.findOne({ name: finderTest.name });
-      const response = await agent.delete(`${base}/${finder._id}`);
+      const response = await agent.set('idtoken', token).delete(`${base}/${finder._id}`);
       expect(response.statusCode).toBe(StatusCodes.NO_CONTENT);
     });
   });
@@ -80,4 +90,5 @@ const initTestDatabase = async (finderTest) => {
 
 const cleanTestDatabase = async () => {
   await finderModel.deleteMany({ name: /.*test.search.*/i });
+  await actorModel.deleteMany({ email: /.*test.*/i });
 };

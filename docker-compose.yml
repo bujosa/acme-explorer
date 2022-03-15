@@ -17,11 +17,11 @@ services:
   frontend:
     container_name: frontend
     build:
-      context: frontend
+      context: frontend/react
       dockerfile: Dockerfile
     volumes:
-      - ./frontend:/frontend
-      - ./frontend/config/nginx-frontend.conf:/etc/nginx/conf.d/nginx-frontend.conf
+      - ./frontend/react:/frontend
+      - ./frontend/react/config/nginx-frontend.conf:/etc/nginx/conf.d/nginx-frontend.conf
       - /frontend/node_modules
 
   mongo:

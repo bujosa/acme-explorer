@@ -15,17 +15,12 @@ export const loginRoutes = (app) => {
    *     description: Return an actor with a token
    *     tags: [Login]
    *     security: []
-   *     parameters:
-   *       - name: email
-   *         type: string
-   *         in: path
-   *         required: true
-   *         description: The actor email
-   *       - name: password
-   *         type: string
-   *         in: path
-   *         required: true
-   *         description: The actor password
+   *     requestBody:
+   *       required: false
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/loginPayload'
    *     responses:
    *       200:
    *         description: A custom token for an actor
@@ -35,5 +30,5 @@ export const loginRoutes = (app) => {
    *              $ref: '#/components/schemas/actor'
    *
    */
-  app.route('/v1/login/').get(login);
+  app.route('/v1/login').post(login);
 };

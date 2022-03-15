@@ -114,13 +114,13 @@ export const unbanActor = (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.query;
+  const { email, password } = req.body;
 
   actorModel.findOne({ email }, (err, actor) => {
     if (err) {
       res.send(err);
     } else if (!actor) {
-      res.status(StatusCodes.UNAUTHORIZED).send({ message: 'forbidden', error: err });
+      res.status(StatusCodes.UNAUTHORIZED).send({ message: 'User email doesn\'t exist'});
     } else {
       // Make sure the password is correct
       actor.verifyPassword(password, async (err, isMatch) => {
@@ -128,7 +128,7 @@ export const login = async (req, res) => {
           return res.send(err);
         }
         if (!isMatch) {
-          return res.status(StatusCodes.UNAUTHORIZED).send({ message: 'forbidden', error: err });
+          return res.status(StatusCodes.UNAUTHORIZED).send({ message: 'Password is incorrect. Please review'});
         }
         try {
           actor.customToken = await admin.auth().createCustomToken(actor.email);

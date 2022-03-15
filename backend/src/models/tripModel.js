@@ -107,7 +107,6 @@ const TripSchema = new Schema({
 // Create a text index for ticker, title and description with weights 10, 5 and 2
 TripSchema.index(
   {
-    state: 1,
     ticker: 'text',
     title: 'text',
     description: 'text'
@@ -125,6 +124,22 @@ TripSchema.index(
 TripSchema.index({
   managerId: 1
 });
+
+TripSchema.statics.getFinderQuery = function(query) {
+  return {
+    ...(query.keyword ? { $text : { $search: query.keyword } } : {}),
+    ...(query.minPrice || query.maxPrice
+      ? {
+          price: {
+            $gte: query.minPrice || 0,
+            $lte: query.maxPrice || Constants.maxPrice
+          }
+        }
+      : {}),
+    ...(query.startDate ? { startDate: query.startDate } : {}),
+    ...(query.endDate ? { endDate: query.endDate } : {})
+  };
+};
 
 // Cleanup method
 TripSchema.methods.cleanup = function() {
