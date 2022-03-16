@@ -1,0 +1,54 @@
+version: '3.9'
+services:
+  backend:
+    container_name: backend
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./backend:/backend
+      - /backend/node_modules
+    depends_on:
+      - mongo
+      - redis
+
+  frontend:
+    container_name: frontend
+    build:
+      context: frontend/react
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend/react/config/nginx-frontend.conf:/etc/nginx/conf.d/nginx-frontend.conf
+      - /frontend/node_modules
+
+  mongo:
+    image: mongo
+    container_name: mongo
+    restart: always
+    ports:
+      - '27017:27017'
+    volumes:
+      - ./config/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: explorer123
+      MONGO_INITDB_DATABASE: acme-explorer
+
+  redis:
+    container_name: redis
+    image: redis:alpine
+    ports:
+      - '6379:6379'
+
+  gateway:
+    image: nginx:latest
+    container_name: proxy
+    ports:
+      - '80:8000'
+    volumes:
+      - ./config/nginx-gateway.conf:/etc/nginx/conf.d/nginx-gateway.conf
+    depends_on:
+      - backend
+      - frontend
