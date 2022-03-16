@@ -11,6 +11,8 @@ import {
 } from '../controllers/applicationController.js';
 
 export const applicationRoutes = app => {
+  //!TODO: ADD AUTH TO ROUTES
+
   /**
    * @openapi
    * tags:
