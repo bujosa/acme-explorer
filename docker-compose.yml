@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3.9'
 services:
   backend:
     container_name: backend
@@ -6,7 +6,7 @@ services:
       context: backend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - ./backend:/backend
       - /backend/node_modules
@@ -29,7 +29,7 @@ services:
     container_name: mongo
     restart: always
     ports:
-      - "27017:27017"
+      - '27017:27017'
     volumes:
       - ./config/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     environment:
@@ -41,13 +41,13 @@ services:
     container_name: redis
     image: redis:alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
 
   gateway:
     image: nginx:latest
     container_name: proxy
     ports:
-      - "80:8000"
+      - '80:8000'
     volumes:
       - ./config/nginx-gateway.conf:/etc/nginx/conf.d/nginx-gateway.conf
     depends_on:

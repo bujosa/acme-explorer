@@ -110,7 +110,7 @@ dist
 .DS_Store
 
 # Kube
-kubertenes/secret.yml
+kubernetes/secret.yml
 
 # VSCode
 .vscode/
@@ -120,3 +120,10 @@ firebase.config.json
 
 # Kube secrets
 secret.yml
+
+# Terraform
+keys
+.terraform
+terraform.tfstate
+terraform.tfstate.backup
+.terraform.lock.hcl
