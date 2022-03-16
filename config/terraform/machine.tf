@@ -47,7 +47,8 @@ resource "aws_instance" "machine01" {
       "sudo chkconfig docker on",
       "sudo service docker start",
       "mkdir /home/ec2-user/config",
-      "mkdir /home/ec2-user/frontend"
+      "mkdir /home/ec2-user/frontend",
+      "sudo docker run -d --name portainer -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock portainer/portainer-ce"
     ]
   }
 

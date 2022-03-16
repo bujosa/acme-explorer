@@ -38,6 +38,14 @@ resource "aws_security_group" "sg_do2122-latam" {
     description = "acme-backend - expose 3000 to outside"
   }
 
+  ingress {
+    from_port   = 9000
+    to_port     = 9000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "portainer - expose 9000 to outside"
+  }
+
   egress {
     from_port   = 80
     to_port     = 80
