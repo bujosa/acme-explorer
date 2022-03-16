@@ -1,0 +1,54 @@
+Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+Resources:
+  MySecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Enable SSH access via port 22 and others ports
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '3000'
+          ToPort: '3000'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '9000'
+          ToPort: '9000'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+  AcmeExplorerInstance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-081d70d1abe7c706e
+      InstanceType: t2.medium
+      SecurityGroups:
+        - !Ref MySecurityGroup
+      KeyName: !Ref KeyName
+      UserData: !Base64 
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo yum update -y
+          sudo yum install -y docker httpd-tools git
+          sudo usermod -a -G docker ec2-user
+          sudo curl -L https://github.com/docker/compose/releases/download/1.29.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          sudo chkconfig docker on
+          sudo service docker start
+          git clone "https://<user>:<password>@github.com/acme-explorer/acme-explorer.git"
+          cd acme-explorer
+          docker-compose up --build -d gateway
+          docker run -d --name portainer -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock portainer/portainer-ce
+  MyEIP:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      InstanceId: !Ref AcmeExplorerInstance
+
