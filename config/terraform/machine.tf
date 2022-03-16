@@ -47,8 +47,7 @@ resource "aws_instance" "machine01" {
       "sudo chkconfig docker on",
       "sudo service docker start",
       "mkdir /home/ec2-user/config",
-      "mkdir /home/ec2-user/frontend",
-      "sudo docker run -d --name portainer -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock portainer/portainer-ce"
+      "mkdir /home/ec2-user/frontend"
     ]
   }
 
@@ -75,7 +74,8 @@ resource "aws_instance" "machine01" {
   provisioner "remote-exec" {
     inline = [
       "sudo /usr/local/bin/docker-compose up -d gateway",
-      "docker exec -it frontend npm run build"
+      "docker exec -it frontend npm run build",
+      "sudo docker run -d --name portainer -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock portainer/portainer-ce"
     ]
   }
 }
