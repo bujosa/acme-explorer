@@ -91,6 +91,16 @@ jobs:
       run:
         working-directory: ./config/terraform
 
+    env:
+      TF_VAR_NAME: $NAME
+      TF_VAR_PORT: $PORT
+      TF_VAR_SERVER_TIMEOUT: $SERVER_TIMEOUT
+      TF_VAR_DB_URI: $DB_URI
+      TF_VAR_REDIS_URI: $REDIS_URI
+      TF_VAR_SECRET: $SECRET
+      TF_VAR_FIREBASE_API_KEY: $FIREBASE_API_KEY
+      TF_VAR_GOOGLE_SERVICE_ACCOUNT: $GOOGLE_SERVICE_ACCOUNT
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
