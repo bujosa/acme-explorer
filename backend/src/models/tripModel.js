@@ -209,4 +209,3 @@ TripSchema.pre('findOneAndUpdate', function(next) {
 });
 
 export const tripModel = mongoose.model('Trip', TripSchema);
-export const stageModel = mongoose.model('Stage', StageSchema);

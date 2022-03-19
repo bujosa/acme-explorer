@@ -108,6 +108,77 @@ export const createTrip = (req, res) => {
   });
 };
 
+// A manager can cancel an ACTIVE trip without applications
+export const cancelTrip = (req, res) => {
+  console.log(Date() + ' - PATCH /trips/' + req.params.tripId + '/cancel');
+
+  // If the new state is CANCELLED, update the reason cancelled
+  // TODO: A trip can only be cancelled if it does not contain any accepted applications
+  
+  // The user must provide a cancellation reason
+  if (
+    req.query.reasonCancelled === '' ||
+    req.query.reasonCancelled === null ||
+    req.query.reasonCancelled === undefined
+    ) {
+      return res.status(400).send({ error: 'Please, provide a cancellation reason (reasonCancelled query parameter)' });
+  }
+
+  tripModel.findById(req.params.tripId, (err, trip) => {
+    if (err) {
+      res.status(500).send(err);
+    } else if (trip) {
+      if (trip.state === 'ACTIVE') {
+        trip.state = 'CANCELLED';
+        trip.reasonCancelled = req.query.reasonCancelled;
+        trip.save(err => {
+          if (err) {
+            res.status(500).send(err);
+          } else {
+            res.status(200).json(trip.cleanup());
+          }
+        });
+      } else {
+        res.status(400).send({ error: 'Trip is not ACTIVE' });
+      }
+    } else {
+      res.status(404).send({ error: 'Trip not found' });
+    }
+  });
+};
+
+
+// A manager can publish an INACTIVE trip
+export const publishTrip = (req, res) => {
+  console.log(Date() + ' - PATCH /trips/' + req.params.tripId + '/publish');
+
+  // TODO: Check credentials (manager)
+  // TODO: Check that the trip belongs to the logged manager
+  // TODO: Check that the object id fulfills the regex (and return 404 if not)
+
+  tripModel.findById(req.params.tripId, (err, trip) => {
+    if (err) {
+      res.status(500).send(err);
+    } else if (trip) {
+      // Check that the trip is INACTIVE
+      if (trip.state !== 'INACTIVE') {
+        return res.status(400).send('The trip must be INACTIVE');
+      }
+
+      trip.state = 'ACTIVE';
+      trip.save(err => {
+        if (err) {
+          res.status(500).send(err);
+        } else {
+          res.json(trip.cleanup());
+        }
+      });
+    } else {
+      res.status(404).send({ error: 'Trip not found' });
+    }
+  });
+};
+
 // A manager can update an INACTIVE trip that belongs to him
 export const updateTrip = (req, res) => {
   console.log(Date() + ' - PUT /trips/' + req.params.tripId);
@@ -132,23 +203,9 @@ export const updateTrip = (req, res) => {
           startDate: req.body.startDate,
           endDate: req.body.endDate,
           pictures: req.body.pictures,
-          stages: req.body.stages,
-          state: req.body.state
+          stages: req.body.stages
         }
       };
-
-      // If the new state is CANCELLED, update the reason cancelled
-      // TODO: A trip can only be cancelled if it does not contain any accepted applications
-      if (req.body.state === 'CANCELLED') {
-        update.$set.reasonCancelled = req.body.reasonCancelled;
-        if (
-          update.$set.reasonCancelled === '' ||
-          update.$set.reasonCancelled === null ||
-          update.$set.reasonCancelled === undefined
-        ) {
-          return res.status(400).send('The cancel reason  cannot be empty');
-        }
-      }
 
       tripModel.findOneAndUpdate({ _id: req.params.tripId }, update, { new: true, runValidators: true }, function(
         err,
@@ -166,6 +223,93 @@ export const updateTrip = (req, res) => {
   });
 };
 
+// Add a stage to an INACTIVE trip
+// TODO: Check that the trip belongs to the logged manager
+export const addStage = (req, res) => {
+  console.log(Date() + ' - POST /trips/' + req.params.tripId + '/stages');
+
+  tripModel.findById(req.params.tripId, (err, trip) => {
+
+    if(err) {
+      res.status(500).send(err);
+    } else if(trip) {
+      // Check that the trip is INACTIVE
+      if(trip.state!=='INACTIVE') {
+        return res.status(400).send('The trip must be INACTIVE');
+      }
+
+      // Get the stage from the body
+      var stage = {
+        title: req.body.title,
+        description: req.body.description,
+        price: req.body.price
+      }
+
+      // Add the stage to the trip
+      trip.stages.push(stage);
+
+      // Save the trip
+      trip.save(err => {
+        if(err) {
+          if (err.name==='ValidationError') {
+            res.status(422).send(err);
+          } else {
+            res.status(500).send(err);
+          }
+        } else {
+          res.json(trip.cleanup());
+        }
+      });
+
+    } else {
+      res.status(404).send({ error: 'Trip not found' });
+    }
+
+  });
+
+};
+
+
+// Delete a stage from an INACTIVE trip
+export const deleteStage = (req, res) => {
+  // TODO: Check that the stage belongs to the logged manager
+  console.log(Date() + ' - DELETE /trips/' + req.params.tripId + '/stages/' + req.params.stageId);
+
+  tripModel.findById(req.params.tripId, (err, trip) => {
+    if(err) {
+      res.status(500).send(err);
+    } else if (trip) {
+      // Check that the trip is INACTIVE
+      if(trip.state !== 'INACTIVE') {
+        return res.status(400).send({ error: 'The trip must be INACTIVE' });
+      }
+
+      // Find the stage in the list of stages with the provided id or return 404
+      const stage = trip.stages.find(stage => stage._id.toString() === req.params.stageId);
+
+      // if stage is undefined, return 404
+      if(!stage) {
+        return res.status(404).send({ error: 'Stage not found' });
+      }
+
+      // Remove the stage from the list of stages
+      trip.stages = trip.stages.filter(stage => stage._id.toString() !== req.params.stageId);
+      // Save the trip
+      trip.save(err => {
+        if(err) {
+          res.status(500).send(err);
+        } else {
+          res.json(trip.cleanup());
+        }
+      });
+
+    } else {
+      res.status(404).send({ error: 'Trip not found' });
+    }
+  })
+
+};
+
 // A manager can delete an INACTIVE trip that belongs to him
 export const deleteTrip = (req, res) => {
   // TODO: Check that the user is logged in as a manager
@@ -179,7 +323,11 @@ export const deleteTrip = (req, res) => {
     } else if (trip) {
       // Check that the trip is INACTIVE
       if (trip.state !== 'INACTIVE') {
-        return res.status(400).send('The trip must be INACTIVE');
+        return res.status(400).send({error: 'The trip must be INACTIVE'});
+      }
+
+      if (trip.stages.length == 1) {
+        return res.status(400).send({error: 'The trip must have at least one stage'});
       }
 
       tripModel.deleteOne({ _id: req.params.tripId }, (err, trip) => {
