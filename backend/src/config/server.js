@@ -9,15 +9,16 @@ import { dbConnection, dbClose } from './database.js';
 import { redisConnection, redisClose } from './redis.js';
 import { StatusCodes } from 'http-status-codes';
 import { errorHandler } from '../shared/middlewares/error-handler.js';
+import { createDataWareHouseJob } from '../controllers/dataWareHouseController.js';
 import {
   actorRoutes,
   applicationRoutes,
   tripRoutes,
-  dashboardRoutes,
   sponsorshipRoutes,
   finderRoutes,
   loginRoutes,
-  registerRoutes
+  registerRoutes,
+  dataWareHouseRoutes
 } from '../routes/index.js';
 
 export class Server {
@@ -48,9 +49,9 @@ export class Server {
     applicationRoutes(this.app);
     sponsorshipRoutes(this.app);
     tripRoutes(this.app);
-    dashboardRoutes(this.app);
     loginRoutes(this.app);
     registerRoutes(this.app);
+    dataWareHouseRoutes(this.app);
 
     this.app.use(errorHandler);
 
@@ -83,6 +84,12 @@ export class Server {
     }
 
     return account;
+  }
+
+  createDataWareHouseJob() {
+    if (process.env.NODE_ENV !== 'test') {
+      createDataWareHouseJob();
+    }
   }
 
   static async createIdTokenFromCustomToken(uid) {

@@ -83,6 +83,7 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/do2122-latam:latest
 
   terraform:
+    if: ${{ false }}
     name: Terraform
     runs-on: ubuntu-latest
     needs: build

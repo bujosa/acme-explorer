@@ -114,14 +114,14 @@ export const cancelTrip = (req, res) => {
 
   // If the new state is CANCELLED, update the reason cancelled
   // TODO: A trip can only be cancelled if it does not contain any accepted applications
-  
+
   // The user must provide a cancellation reason
   if (
     req.query.reasonCancelled === '' ||
     req.query.reasonCancelled === null ||
     req.query.reasonCancelled === undefined
-    ) {
-      return res.status(400).send({ error: 'Please, provide a cancellation reason (reasonCancelled query parameter)' });
+  ) {
+    return res.status(400).send({ error: 'Please, provide a cancellation reason (reasonCancelled query parameter)' });
   }
 
   tripModel.findById(req.params.tripId, (err, trip) => {
@@ -146,7 +146,6 @@ export const cancelTrip = (req, res) => {
     }
   });
 };
-
 
 // A manager can publish an INACTIVE trip
 export const publishTrip = (req, res) => {
@@ -229,12 +228,11 @@ export const addStage = (req, res) => {
   console.log(Date() + ' - POST /trips/' + req.params.tripId + '/stages');
 
   tripModel.findById(req.params.tripId, (err, trip) => {
-
-    if(err) {
+    if (err) {
       res.status(500).send(err);
-    } else if(trip) {
+    } else if (trip) {
       // Check that the trip is INACTIVE
-      if(trip.state!=='INACTIVE') {
+      if (trip.state !== 'INACTIVE') {
         return res.status(400).send('The trip must be INACTIVE');
       }
 
@@ -243,15 +241,15 @@ export const addStage = (req, res) => {
         title: req.body.title,
         description: req.body.description,
         price: req.body.price
-      }
+      };
 
       // Add the stage to the trip
       trip.stages.push(stage);
 
       // Save the trip
       trip.save(err => {
-        if(err) {
-          if (err.name==='ValidationError') {
+        if (err) {
+          if (err.name === 'ValidationError') {
             res.status(422).send(err);
           } else {
             res.status(500).send(err);
@@ -260,15 +258,11 @@ export const addStage = (req, res) => {
           res.json(trip.cleanup());
         }
       });
-
     } else {
       res.status(404).send({ error: 'Trip not found' });
     }
-
   });
-
 };
-
 
 // Delete a stage from an INACTIVE trip
 export const deleteStage = (req, res) => {
@@ -276,11 +270,11 @@ export const deleteStage = (req, res) => {
   console.log(Date() + ' - DELETE /trips/' + req.params.tripId + '/stages/' + req.params.stageId);
 
   tripModel.findById(req.params.tripId, (err, trip) => {
-    if(err) {
+    if (err) {
       res.status(500).send(err);
     } else if (trip) {
       // Check that the trip is INACTIVE
-      if(trip.state !== 'INACTIVE') {
+      if (trip.state !== 'INACTIVE') {
         return res.status(400).send({ error: 'The trip must be INACTIVE' });
       }
 
@@ -288,7 +282,7 @@ export const deleteStage = (req, res) => {
       const stage = trip.stages.find(stage => stage._id.toString() === req.params.stageId);
 
       // if stage is undefined, return 404
-      if(!stage) {
+      if (!stage) {
         return res.status(404).send({ error: 'Stage not found' });
       }
 
@@ -296,18 +290,16 @@ export const deleteStage = (req, res) => {
       trip.stages = trip.stages.filter(stage => stage._id.toString() !== req.params.stageId);
       // Save the trip
       trip.save(err => {
-        if(err) {
+        if (err) {
           res.status(500).send(err);
         } else {
           res.json(trip.cleanup());
         }
       });
-
     } else {
       res.status(404).send({ error: 'Trip not found' });
     }
-  })
-
+  });
 };
 
 // A manager can delete an INACTIVE trip that belongs to him
@@ -323,11 +315,11 @@ export const deleteTrip = (req, res) => {
     } else if (trip) {
       // Check that the trip is INACTIVE
       if (trip.state !== 'INACTIVE') {
-        return res.status(400).send({error: 'The trip must be INACTIVE'});
+        return res.status(400).send({ error: 'The trip must be INACTIVE' });
       }
 
       if (trip.stages.length == 1) {
-        return res.status(400).send({error: 'The trip must have at least one stage'});
+        return res.status(400).send({ error: 'The trip must have at least one stage' });
       }
 
       tripModel.deleteOne({ _id: req.params.tripId }, (err, trip) => {
