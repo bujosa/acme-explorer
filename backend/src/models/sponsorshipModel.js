@@ -18,12 +18,10 @@ const SponsorshipSchema = new Schema(
       type: String,
       enum: Object.values(BasicState),
       default: BasicState.INACTIVE
-    },
-    createdAt: Number,
-    updatedAt: Number
+    }
   },
   {
-    timestamps: { currentTime: () => moment().unix() }
+    timestamps: true
   }
 );
 

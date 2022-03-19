@@ -41,12 +41,10 @@ const FinderSchema = new Schema(
         },
         message: 'Start date must be less than end date'
       }
-    },
-    createdAt: Number,
-    updatedAt: Number
+    }
   },
   {
-    timestamps: { currentTime: () => moment().unix() }
+    timestamps: true
   }
 );
 

@@ -14,12 +14,10 @@ const ApplicationSchema = new Schema(
       enum: Object.values(ApplicationState),
       default: ApplicationState.PENDING
     },
-    reasonRejected: { type: String, default: null },
-    createdAt: Number,
-    updatedAt: Number
+    reasonRejected: { type: String, default: null }
   },
   {
-    timestamps: { currentTime: () => moment().unix() }
+    timestamps: true
   }
 );
 
