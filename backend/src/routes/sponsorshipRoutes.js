@@ -1,10 +1,15 @@
+import { verifyUser } from '../controllers/authController.js';
+import { Roles } from '../shared/enums.js';
+import { SPONSOR } from '../shared/auth/authorized-roles.arrays.js';
 import {
   findAllSponsorships,
   createSponsorship,
   findSponsorship,
   updateSponsorship,
   deleteSponsorship,
-  paySponsorship
+  paySponsorship,
+  configureFlatRate,
+  findMySponsorships
 } from '../controllers/sponsorshipController.js';
 
 export const sponsorshipRoutes = app => {
@@ -49,8 +54,26 @@ export const sponsorshipRoutes = app => {
    */
   app
     .route('/v1/sponsorships')
-    .get(findAllSponsorships)
-    .post(createSponsorship);
+    .get(verifyUser([Roles.ADMIN]), findAllSponsorships)
+    .post(verifyUser(SPONSOR), createSponsorship);
+
+  /**
+   * @openapi
+   * /v1/mySponsorships:
+   *   get:
+   *     description: Returns a list of all the sponsorships by the logged in user
+   *     tags: [Sponsorships]
+   *     responses:
+   *       200:
+   *         description: List of self sponsorships
+   *         content:
+   *           application/json:
+   *            schema:
+   *              type: array
+   *              items:
+   *                $ref: '#/components/schemas/sponsorship'
+   */
+  app.route('/v1/mySponsorships').get(verifyUser(SPONSOR), findMySponsorships);
 
   /**
    * @openapi
@@ -116,9 +139,9 @@ export const sponsorshipRoutes = app => {
    */
   app
     .route('/v1/sponsorships/:sponsorshipId')
-    .get(findSponsorship)
-    .put(updateSponsorship)
-    .delete(deleteSponsorship);
+    .get(verifyUser(SPONSOR), findSponsorship)
+    .put(verifyUser(SPONSOR), updateSponsorship)
+    .delete(verifyUser(SPONSOR), deleteSponsorship);
 
   /**
    * @openapi
@@ -139,5 +162,22 @@ export const sponsorshipRoutes = app => {
    *             schema:
    *               $ref: '#/components/schemas/sponsorship'
    */
-  app.route('/v1/sponsorships/:sponsorshipId/pay').patch(paySponsorship);
+  app.route('/v1/sponsorships/:sponsorshipId/pay').patch(verifyUser(SPONSOR), paySponsorship);
+  /**
+   * @openapi
+   * /v1/sponsorships/configureFlatRate/{newFlatRate}:
+   *   patch:
+   *     description: Configure Flat Rate
+   *     tags: [Sponsorships]
+   *     parameters:
+   *       - name: newFlatRate
+   *         type: number
+   *         minimum: 0
+   *         in: path
+   *         required: true
+   *     responses:
+   *       200:
+   *         description: The new flat rate
+   */
+  app.route('/v1/sponsorships/configureFlatRate/:newFlatRate').patch(verifyUser([Roles.ADMIN]), configureFlatRate);
 };

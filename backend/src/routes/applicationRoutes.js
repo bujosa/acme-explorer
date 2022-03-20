@@ -1,3 +1,6 @@
+import { verifyUser } from '../controllers/authController.js';
+import { Roles } from '../shared/enums.js';
+import { EXPLORER, MANAGER } from '../shared/auth/authorized-roles.arrays.js';
 import {
   findAllApplications,
   createApplication,
@@ -7,12 +10,11 @@ import {
   cancelApplication,
   payApplication,
   acceptApplication,
-  rejectApplication
+  rejectApplication,
+  findMyApplications
 } from '../controllers/applicationController.js';
 
 export const applicationRoutes = app => {
-  //!TODO: ADD AUTH TO ROUTES
-
   /**
    * @openapi
    * tags:
@@ -54,8 +56,26 @@ export const applicationRoutes = app => {
    */
   app
     .route('/v1/applications')
-    .get(findAllApplications)
-    .post(createApplication);
+    .get(verifyUser([Roles.ADMIN]), findAllApplications)
+    .post(verifyUser(EXPLORER), createApplication);
+
+  /**
+   * @openapi
+   * /v1/myApplications:
+   *   get:
+   *     description: Returns a list of all the applications by the logged in user
+   *     tags: [Applications]
+   *     responses:
+   *       200:
+   *         description: List of self applications
+   *         content:
+   *           application/json:
+   *            schema:
+   *              type: array
+   *              items:
+   *                $ref: '#/components/schemas/application'
+   */
+  app.route('/v1/myApplications').get(verifyUser([Roles.EXPLORER, Roles.MANAGER]), findMyApplications);
 
   /**
    * @openapi
@@ -121,9 +141,9 @@ export const applicationRoutes = app => {
    */
   app
     .route('/v1/applications/:applicationId')
-    .get(findApplication)
-    .put(updateApplication)
-    .delete(deleteApplication);
+    .get(verifyUser(EXPLORER), findApplication)
+    .put(verifyUser(EXPLORER), updateApplication)
+    .delete(verifyUser(EXPLORER), deleteApplication);
 
   /**
    * @openapi
@@ -144,7 +164,7 @@ export const applicationRoutes = app => {
    *             schema:
    *               $ref: '#/components/schemas/application'
    */
-  app.route('/v1/applications/:applicationId/cancel').patch(cancelApplication);
+  app.route('/v1/applications/:applicationId/cancel').patch(verifyUser(EXPLORER), cancelApplication);
 
   /**
    * @openapi
@@ -165,7 +185,7 @@ export const applicationRoutes = app => {
    *             schema:
    *               $ref: '#/components/schemas/application'
    */
-  app.route('/v1/applications/:applicationId/pay').patch(payApplication);
+  app.route('/v1/applications/:applicationId/pay').patch(verifyUser(EXPLORER), payApplication);
 
   /**
    * @openapi
@@ -186,7 +206,7 @@ export const applicationRoutes = app => {
    *             schema:
    *               $ref: '#/components/schemas/application'
    */
-  app.route('/v1/applications/:applicationId/accept').patch(acceptApplication);
+  app.route('/v1/applications/:applicationId/accept').patch(verifyUser(MANAGER), acceptApplication);
 
   /**
    * @openapi
@@ -207,5 +227,5 @@ export const applicationRoutes = app => {
    *             schema:
    *               $ref: '#/components/schemas/application'
    */
-  app.route('/v1/applications/:applicationId/reject').patch(rejectApplication);
+  app.route('/v1/applications/:applicationId/reject').patch(verifyUser(MANAGER), rejectApplication);
 };

@@ -12,14 +12,14 @@ const options = {
     components: {
       schemas: swaggerSchemas,
       securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT'
+        authToken: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'idtoken'
         }
       }
     },
-    security: [{ bearerAuth: [] }]
+    security: [{ authToken: [] }]
   },
   apis: ['./src/routes/*.js']
 };

@@ -142,7 +142,7 @@ export const actorRoutes = app => {
    *         content:
    *           application/json:
    *             schema:
-   *               $ref: '#/components/schemas/actors'
+   *               $ref: '#/components/schemas/actor'
    */
   app.route('/v1/actors/:actorId/ban').patch(verifyUser([Roles.ADMIN]), banActor);
 
@@ -163,7 +163,7 @@ export const actorRoutes = app => {
    *         content:
    *           application/json:
    *             schema:
-   *               $ref: '#/components/schemas/actors'
+   *               $ref: '#/components/schemas/actor'
    */
   app.route('/v1/actors/:actorId/unban').patch(verifyUser([Roles.ADMIN]), unbanActor);
 

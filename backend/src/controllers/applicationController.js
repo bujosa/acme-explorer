@@ -1,40 +1,57 @@
 import { StatusCodes } from 'http-status-codes';
 import { applicationModel } from '../models/applicationModel.js';
+import { tripModel } from '../models/tripModel.js';
+import { actorModel } from '../models/actorModel.js';
 import { ApplicationState } from '../shared/enums.js';
 import { RecordNotFound } from '../shared/exceptions.js';
+import { Roles } from '../shared/enums.js';
 
 export const findAllApplications = async (req, res, next) => {
   try {
+    const { actor } = res.locals;
+
+    if (!actor) {
+      return res.status(StatusCodes.UNAUTHORIZED).send('Not authorized');
+    }
+
+    if (actor.role !== Roles.ADMIN) {
+      return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation');
+    }
+
     const applications = await applicationModel
       .find({})
       .populate(['trip', 'explorer'])
       .sort('state');
-    res.json(applications);
-  } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
-  }
-};
-
-export const findApplication = async (req, res, next) => {
-  try {
-    const application = await applicationModel.findById(req.params.applicationId);
-
-    if (!application) {
-      return next(new RecordNotFound());
-    }
-
-    res.json(application);
+    return res.json(applications);
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
   }
 };
 
 export const createApplication = async (req, res) => {
-  const newApplication = new applicationModel(req.body);
-
   try {
+    const { actor } = res.locals;
+
+    const { trip, explorer } = req.body;
+
+    const { startDate } = await tripModel.findById(trip);
+    const { role } = await actorModel.findById(explorer);
+
+    if (!(actor.role === Roles.EXPLORER || actor.role === Roles.ADMIN)) {
+      return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation');
+    }
+
+    if (role !== Roles.EXPLORER) {
+      return res.status(StatusCodes.BAD_REQUEST).send('The provided actor must be an explorer');
+    }
+
+    if (startDate < new Date()) {
+      return res.status(StatusCodes.BAD_REQUEST).send("Can't apply to a trip in the past.");
+    }
+
+    const newApplication = new applicationModel(req.body);
     const application = await newApplication.save();
-    res.status(StatusCodes.CREATED).json(application);
+    return res.status(StatusCodes.CREATED).json(application);
   } catch (error) {
     if (error.name === 'ValidationError') {
       res.status(StatusCodes.UNPROCESSABLE_ENTITY).json(error);
@@ -44,12 +61,92 @@ export const createApplication = async (req, res) => {
   }
 };
 
+export const findApplication = async (req, res, next) => {
+  try {
+    const application = await applicationModel.findById(req.params.applicationId);
+    const { actor } = res.locals;
+
+    if (!application) {
+      return next(new RecordNotFound());
+    }
+
+    if (!actor) {
+      return res.status(StatusCodes.UNAUTHORIZED).send('Not authorized');
+    }
+
+    if (!(actor.role === Roles.ADMIN || actor._id.toString() === application.explorer.toString())) {
+      return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation.');
+    }
+
+    return res.json(application);
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+  }
+};
+
+export const findMyApplications = async (req, res) => {
+  try {
+    const { actor } = res.locals;
+
+    if (!actor) {
+      return res.status(StatusCodes.UNAUTHORIZED).send('Not authorized');
+    }
+
+    if (actor.role === Roles.EXPLORER) {
+      const applications = await applicationModel
+        .find({ explorer: actor._id })
+        .populate(['trip'])
+        .sort('state');
+      return res.json(applications);
+    }
+
+    if (actor.role === Roles.MANAGER) {
+      const applications = await applicationModel.aggregate([
+        {
+          $lookup: {
+            from: 'trips',
+            localField: 'trip',
+            foreignField: '_id',
+            as: 'trip_info'
+          }
+        },
+        {
+          $unwind: '$trip_info'
+        },
+        {
+          $match: {
+            "trip_info.manager": actor._id
+          }
+        }
+      ]);
+
+      return res.json(applications);
+    }
+
+    return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation');
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+  }
+};
+
 export const updateApplication = async (req, res) => {
   try {
+    const { explorer } = await applicationModel.findById(req.params.applicationId);
+    const { actor } = res.locals;
+
+    if (!actor) {
+      return res.status(StatusCodes.UNAUTHORIZED).send('Not authorized');
+    }
+
+    if (!(actor.role === Roles.ADMIN || actor._id.toString() === explorer.toString())) {
+      return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation.');
+    }
+
     const application = await applicationModel.findOneAndUpdate({ _id: req.params.applicationId }, req.body, {
       new: true
     });
-    res.json(application);
+
+    return res.json(application);
   } catch (error) {
     if (error.name === 'ValidationError') {
       res.status(StatusCodes.UNPROCESSABLE_ENTITY).json(error);
@@ -61,8 +158,19 @@ export const updateApplication = async (req, res) => {
 
 export const deleteApplication = async (req, res) => {
   try {
+    const { explorer } = await applicationModel.findById(req.params.applicationId);
+    const { actor } = res.locals;
+
+    if (!actor) {
+      return res.status(StatusCodes.UNAUTHORIZED).send('Not authorized.');
+    }
+
+    if (!(actor.role === Roles.ADMIN || actor._id.toString() === explorer.toString())) {
+      return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation.');
+    }
+
     await applicationModel.deleteOne({ _id: req.params.applicationId });
-    res.sendStatus(StatusCodes.NO_CONTENT);
+    return res.sendStatus(StatusCodes.NO_CONTENT);
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
   }
@@ -70,10 +178,21 @@ export const deleteApplication = async (req, res) => {
 
 export const acceptApplication = async (req, res, next) => {
   try {
-    const application = await applicationModel.findById(req.params.applicationId);
+    const { actor } = res.locals;
+    const application = await applicationModel.findById(req.params.applicationId).populate('trip');
 
     if (!application) {
       return next(new RecordNotFound());
+    }
+
+    if (
+      !(
+        actor._id.toString() === application.trip.manager.toString() ||
+        actor.role === Roles.MANAGER ||
+        actor.role === Roles.ADMIN
+      )
+    ) {
+      return res.status(StatusCodes.FORBIDDEN).send('You do not have access.');
     }
 
     if (application.state !== ApplicationState.PENDING) {
@@ -82,10 +201,13 @@ export const acceptApplication = async (req, res, next) => {
 
     const acceptedApplication = await applicationModel.findOneAndUpdate(
       { _id: req.params.applicationId },
-      { state: ApplicationState.DUE }
+      { state: ApplicationState.DUE },
+      {
+        new: true
+      }
     );
 
-    res.json(acceptedApplication);
+    return res.json(acceptedApplication);
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
   }
@@ -93,7 +215,19 @@ export const acceptApplication = async (req, res, next) => {
 
 export const rejectApplication = async (req, res, next) => {
   try {
+    const { actor } = res.locals;
+
     const application = await applicationModel.findById(req.params.applicationId);
+
+    if (
+      !(
+        actor._id.toString() === application.trip.manager.toString() ||
+        actor.role === Roles.MANAGER ||
+        actor.role === Roles.ADMIN
+      )
+    ) {
+      return res.status(StatusCodes.FORBIDDEN).send('You do not have access.');
+    }
 
     if (!application) {
       return next(new RecordNotFound());
@@ -114,10 +248,13 @@ export const rejectApplication = async (req, res, next) => {
       {
         state: ApplicationState.REJECTED,
         reasonRejected: req.body.reasonRejected
+      },
+      {
+        new: true
       }
     );
 
-    res.json(rejectedApplication);
+    return res.json(rejectedApplication);
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
   }
@@ -125,8 +262,16 @@ export const rejectApplication = async (req, res, next) => {
 
 export const cancelApplication = async (req, res, next) => {
   try {
-    // TODO: only the actor that created the application should cancel it
+    const { actor } = res.locals;
     const application = await applicationModel.findById(req.params.applicationId);
+
+    if (!actor) {
+      return res.status(StatusCodes.UNAUTHORIZED).send('Not authorized.');
+    }
+
+    if (!(actor.role === Roles.ADMIN || actor._id.toString() === application.explorer.toString())) {
+      return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation.');
+    }
 
     if (!application) {
       return next(new RecordNotFound());
@@ -138,9 +283,12 @@ export const cancelApplication = async (req, res, next) => {
 
     const cancelledApplication = await applicationModel.findOneAndUpdate(
       { _id: req.params.applicationId },
-      { state: ApplicationState.CANCELLED }
+      { state: ApplicationState.CANCELLED },
+      {
+        new: true
+      }
     );
-    res.json(cancelledApplication);
+    return res.json(cancelledApplication);
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
   }
@@ -148,6 +296,7 @@ export const cancelApplication = async (req, res, next) => {
 
 export const payApplication = async (req, res, next) => {
   try {
+    const { actor } = res.locals;
     const application = await applicationModel.findById(req.params.applicationId);
 
     if (!application) {
@@ -158,17 +307,28 @@ export const payApplication = async (req, res, next) => {
       return res.status(StatusCodes.BAD_REQUEST).send('The application must be DUE.');
     }
 
+    if (!actor) {
+      return res.status(StatusCodes.UNAUTHORIZED).send('Not authorized.');
+    }
+
+    if (!(actor.role === Roles.ADMIN || actor._id.toString() === application.exponsor.toString())) {
+      return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation.');
+    }
+
     const isPaymentApproved = true; // Payment logic and connection with Paypal
 
     if (isPaymentApproved) {
       const acceptedApplication = await applicationModel.findOneAndUpdate(
         { _id: req.params.applicationId },
-        { state: ApplicationState.ACCEPTED }
+        { state: ApplicationState.ACCEPTED },
+        {
+          new: true
+        }
       );
-      res.json(acceptedApplication);
-    } else {
-      res.status(StatusCodes.SERVICE_UNAVAILABLE).send({ message: 'Error processing payment.' });
+      return res.json(acceptedApplication);
     }
+
+    return res.status(StatusCodes.SERVICE_UNAVAILABLE).send({ message: 'Error processing payment.' });
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
   }
