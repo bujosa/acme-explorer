@@ -14,11 +14,11 @@ export const findActors = async (req, res) => {
   }
 };
 
-export const findActor = async (req, res) => {
+export const findActor = async (req, res, next) => {
   try {
     const actor = await actorModel.findById(req.params.actorId);
-
-    if (!actor) {
+    
+     if (!actor) {
       return next(new RecordNotFound());
     }
 
@@ -68,7 +68,7 @@ export const updateActor = async (req, res) => {
 export const deleteActor = async (req, res) => {
   try {
     await actorModel.deleteOne({ _id: req.params.actorId });
-    res.status(StatusCodes.NO_CONTENT);
+    res.sendStatus(StatusCodes.NO_CONTENT);
   } catch (err) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(err);
   }

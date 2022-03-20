@@ -12,7 +12,7 @@
     "format": "prettier --write '{src,test}/**/*.js'",
     "lint": "eslint '{src,apps,libs,test}/**/*.js'",
     "lint:fix": "npm run lint -- --fix",
-    "test": "cross-env PORT=4000 NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles --testMatch='**/test/**/*.test.js' --coverage"
+    "test": "cross-env PORT=4000 NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --testTimeout=30000 --detectOpenHandles --testMatch='**/test/**/*.test.js' --coverage"
   },
   "pre-commit": [
     "lint"
@@ -47,6 +47,7 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.17.0",
+    "@faker-js/faker": "^6.0.0",
     "babel-eslint": "10.1.0",
     "cross-env": "^7.0.3",
     "eslint": "8.9.0",
