@@ -23,8 +23,6 @@ const StageSchema = new Schema({
 
 const State = ['ACTIVE', 'INACTIVE', 'CANCELLED'];
 
-// TODO: Define indexes
-// TODO: strict: false ???
 const TripSchema = new Schema({
   ticker: {
     type: String,
@@ -65,13 +63,7 @@ const TripSchema = new Schema({
   },
   endDate: {
     type: Date,
-    required: 'End date is required',
-    validate: {
-      validator: function(v) {
-        return v > this.startDate; // StartDate before endDate
-      },
-      message: 'End date must be after start date'
-    }
+    required: 'End date is required'
   },
   pictures: {
     type: [String],
@@ -96,7 +88,6 @@ const TripSchema = new Schema({
     }
   },
   manager: {
-    // TODO: It must belong to an actor of type manager
     type: Schema.Types.ObjectId,
     ref: 'Actor',
     required: 'Please provide a manager.'
@@ -122,7 +113,7 @@ TripSchema.index(
 );
 
 TripSchema.index({
-  managerId: 1
+  manager: 1
 });
 
 TripSchema.statics.getFinderQuery = function(query) {

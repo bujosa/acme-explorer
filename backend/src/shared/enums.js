@@ -24,7 +24,7 @@ export const Languages = {
 };
 
 export const Operator = {
-  'equal': '$eq',
+  equal: '$eq',
   'not equal': '$ne',
   'greater than': '$gt',
   'greater than or equal': '$gte',

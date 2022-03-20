@@ -143,7 +143,4 @@ export const tripRoutes = app => {
   app.route('/v1/trips/:tripId/stages/:stageId').delete(verifyUser([Roles.MANAGER]), deleteStage);
 
   app.route('/v1/trips/:tripId/stages').post(verifyUser([Roles.MANAGER]), addStage);
-
-  
-
 };

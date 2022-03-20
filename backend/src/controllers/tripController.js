@@ -1,4 +1,5 @@
 import { tripModel } from '../models/tripModel.js';
+import { applicationModel } from '../models/applicationModel.js';
 import Constants from '../shared/constants.js';
 import { StatusCodes } from 'http-status-codes';
 
@@ -23,22 +24,21 @@ export const findTrip = async (req, res) => {
 // Find one of the trips of the logged in manager
 export const findOneOfMyTrips = async (req, res) => {
   tripModel.findById(req.params.tripId, (err, trip) => {
-    if(err){
+    if (err) {
       res.status(500).send(err);
     } else if (trip) {
       const { actor } = res.locals;
-      if(actor.id !== trip.manager) {
+      if (actor.id !== trip.manager.toString()) {
         return res.status(403).send({ error: 'You are not authorized to access this trip' });
       } else {
         res.json(trip.cleanup());
       }
     }
-  })
-}
+  });
+};
 
 // Find trips of the logged in manager
 export const findMyTrips = (req, res) => {
-
   const { actor } = res.locals;
 
   tripModel.find(
@@ -113,8 +113,13 @@ export const createTrip = async (req, res) => {
     pictures: req.body.pictures,
     state: 'INACTIVE',
     stages: req.body.stages,
-    manager: actor.id  // id of the logged user
+    manager: actor.id // id of the logged user
   };
+
+  // If startDate is after endDate, return error
+  if (trip.startDate > trip.endDate) {
+    return res.status(400).send({ error: 'Start date cannot be after end date' });
+  }
 
   const newTrip = new tripModel(trip);
 
@@ -151,22 +156,35 @@ export const cancelTrip = (req, res) => {
     if (err) {
       res.status(500).send(err);
     } else if (trip) {
+      // If the start date is in the past, the trip cannot be cancelled
+      if (trip.startDate < new Date()) {
+        return res.status(400).send({ error: 'The trip cannot be cancelled because it has already started' });
+      }
+
       if (trip.state === 'ACTIVE') {
         const { actor } = res.locals;
-        if(actor.id === trip.manager) {
-          trip.state = 'CANCELLED';
-          trip.reasonCancelled = req.query.reasonCancelled;
-          trip.save(err => {
+        if (actor.id === trip.manager.toString()) {
+          // Count the number of accepted applications of the trip
+          applicationModel.countDocuments({ trip: trip.id, state: 'ACCEPTED' }, (err, count) => {
             if (err) {
               res.status(500).send(err);
+            } else if (count > 0) {
+              return res.status(400).send({ error: 'The trip cannot be cancelled because it has applications' });
             } else {
-              res.status(200).json(trip.cleanup());
+              trip.state = 'CANCELLED';
+              trip.reasonCancelled = req.query.reasonCancelled;
+              trip.save((err, trip) => {
+                if (err) {
+                  res.status(500).send(err);
+                } else {
+                  res.json(trip.cleanup());
+                }
+              });
             }
           });
         } else {
           return res.status(403).send({ error: 'You are not authorized to cancel this trip' });
         }
-        
       } else {
         res.status(400).send({ error: 'Trip is not ACTIVE' });
       }
@@ -190,7 +208,7 @@ export const publishTrip = (req, res) => {
       }
 
       const { actor } = res.locals;
-      if(actor.id === trip.manager) {
+      if (actor.id === trip.manager.toString()) {
         trip.state = 'ACTIVE';
         trip.save(err => {
           if (err) {
@@ -202,8 +220,6 @@ export const publishTrip = (req, res) => {
       } else {
         return res.status(403).send({ error: 'You are not authorized to publish this trip' });
       }
-
-      
     } else {
       res.status(404).send({ error: 'Trip not found' });
     }
@@ -225,8 +241,13 @@ export const updateTrip = (req, res) => {
 
       const { actor } = res.locals;
 
-      if(actor.id !== trip.manager) {
+      if (actor.id !== trip.manager.toString()) {
         return res.status(403).send({ error: 'You are not authorized to update this trip' });
+      }
+
+      // If startDate is after endDate, return error
+      if (req.body.startDate > req.body.endDate) {
+        return res.status(400).send({ error: 'Start date cannot be after end date' });
       }
 
       var update = {
@@ -271,7 +292,7 @@ export const addStage = (req, res) => {
       }
 
       const { actor } = res.locals;
-      if(actor.id !== trip.manager) {
+      if (actor.id !== trip.manager.toString()) {
         return res.status(403).send({ error: 'You are not authorized to add a stage to this trip' });
       }
 
@@ -317,7 +338,7 @@ export const deleteStage = (req, res) => {
       }
 
       const { actor } = res.locals;
-      if(actor.id !== trip.manager) {
+      if (actor.id !== trip.manager.toString()) {
         return res.status(403).send({ error: 'You are not authorized to remove a stage from this trip' });
       }
 
@@ -359,12 +380,8 @@ export const deleteTrip = (req, res) => {
       }
 
       const { actor } = res.locals;
-      if(actor.id !== trip.manager) {
+      if (actor.id !== trip.manager.toString()) {
         return res.status(403).send({ error: 'You are not authorized to delete this trip' });
-      }
-
-      if (trip.stages.length == 1) {
-        return res.status(400).send({ error: 'The trip must have at least one stage' });
       }
 
       tripModel.deleteOne({ _id: req.params.tripId }, (err, trip) => {
