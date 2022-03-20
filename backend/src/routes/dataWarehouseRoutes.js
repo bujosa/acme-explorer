@@ -9,7 +9,44 @@ import { Roles } from '../shared/enums.js';
 import { verifyUser } from '../controllers/authController.js';
 
 export const dataWarehouseRoutes = app => {
-  // Get a list of all indicators or post a new computation period for rebuilding
+  /**
+   * @openapi
+   * tags:
+   *  name: Dashboard
+   *  description: Managing the admin dashboard
+   */
+
+  /**
+   * @openapi
+   * /v1/datawarehouse:
+   *   get:
+   *     description: Get a list of all indicators
+   *     tags: [Dashboard]
+   *     responses:
+   *       200:
+   *         description: List of indicators
+   *   post:
+   *      description: Post a new computation period for rebuilding
+   *      tags: [Dashboard]
+   *      parameters:
+   *       - name: rebuildPeriod
+   *         in: query
+   *         required: true
+   *         description: The new computation period
+   *         type: string
+   *         enum: [everyHour,everyMinute,everyTenSeconds,everySecond]
+   *      responses:
+   *        201:
+   *          description: Computation period updated
+   *        400:
+   *          description: The trip was not created
+   *        422:
+   *          description: Validation error
+   *        401:
+   *          description: Authentication error
+   *        403:
+   *          description: Authorization error
+   */
   app
     .route('/v1/datawarehouse')
     .get(verifyUser([Roles.ADMIN]), listAllIndicators)

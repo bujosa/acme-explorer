@@ -141,7 +141,6 @@ export const cancelTrip = (req, res) => {
   console.log(Date() + ' - PATCH /trips/' + req.params.tripId + '/cancel');
 
   // If the new state is CANCELLED, update the reason cancelled
-  // TODO: A trip can only be cancelled if it does not contain any accepted applications
 
   // The user must provide a cancellation reason
   if (

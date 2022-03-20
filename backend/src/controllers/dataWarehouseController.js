@@ -16,7 +16,6 @@ import { InvalidRequest } from '../shared/exceptions.js';
 let rebuildPeriod = '0 0 * * * *'; // Default
 let computeDataWarehouseJob;
 
-// TODO: Add authentication
 export const listAllIndicators = (req, res) => {
   console.log('Requesting ALL indicators');
 
@@ -31,7 +30,6 @@ export const listAllIndicators = (req, res) => {
     });
 };
 
-// TODO: Add authentication
 export const findLastIndicator = (req, res) => {
   console.log('Requesting LAST indicator');
 
@@ -47,10 +45,22 @@ export const findLastIndicator = (req, res) => {
     });
 };
 
-// TODO: Add validation and authentication
 export const changeRebuildPeriod = function(req, res) {
   console.log('Updating rebuild period. Request period: ' + req.query.rebuildPeriod);
-  rebuildPeriod = req.query.rebuildPeriod;
+  if (req.query.rebuildPeriod === 'everyHour') {
+    rebuildPeriod = '0 0 * * * *';
+  } else if (req.query.rebuildPeriod === 'everyMinute') {
+    rebuildPeriod = '*/1 * * * * *';
+  } else if (req.query.rebuildPeriod === 'everyTenSeconds') {
+    rebuildPeriod = '*/10 * * * * *';
+  } else if (req.query.rebuildPeriod === 'everySecond') {
+    rebuildPeriod = '* * * * * *';
+  } else {
+    throw new InvalidRequest(
+      'Invalid rebuild period, accepted values: everyHour, everyMinute, everyTenSeconds, everySecond'
+    );
+  }
+  console.log(rebuildPeriod);
   computeDataWarehouseJob.setTime(new CronTime(rebuildPeriod));
   computeDataWarehouseJob.start();
 
