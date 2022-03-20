@@ -2,26 +2,48 @@ import { tripModel } from '../models/tripModel.js';
 import Constants from '../shared/constants.js';
 import { StatusCodes } from 'http-status-codes';
 
-// Find one trip by id
-// TODO: If trip is INACTIVE, only its owner (manager) can see it
-export const findTrip = (req, res) => {
+// Find one trip by id, no login required
+export const findTrip = async (req, res) => {
   tripModel.findById(req.params.tripId, (err, trip) => {
     if (err) {
       res.status(500).send(err);
     } else if (trip) {
-      res.json(trip.cleanup());
+      // Return the trip only if it is inactive or if it belongs to the logged in manager
+      if (trip.state !== 'INACTIVE') {
+        res.json(trip.cleanup());
+      } else {
+        return res.status(400).send('The trip cannot be INACTIVE');
+      }
     } else {
       res.status(404).send({ error: 'Trip not found' });
     }
   });
 };
 
+// Find one of the trips of the logged in manager
+export const findOneOfMyTrips = async (req, res) => {
+  tripModel.findById(req.params.tripId, (err, trip) => {
+    if(err){
+      res.status(500).send(err);
+    } else if (trip) {
+      const { actor } = res.locals;
+      if(actor.id !== trip.manager) {
+        return res.status(403).send({ error: 'You are not authorized to access this trip' });
+      } else {
+        res.json(trip.cleanup());
+      }
+    }
+  })
+}
+
 // Find trips of the logged in manager
-// TODO: Session management
 export const findMyTrips = (req, res) => {
+
+  const { actor } = res.locals;
+
   tripModel.find(
     {
-      // manager: req.params.managerId
+      manager: actor.id
     },
     (err, trips) => {
       if (err) {
@@ -77,9 +99,10 @@ export const findTrips = async (req, res) => {
   }
 };
 
-export const createTrip = (req, res) => {
+export const createTrip = async (req, res) => {
   console.log(Date() + ' - POST /trips');
-  // TODO: Check credentials (manager)
+
+  const { actor } = res.locals;
 
   var trip = {
     title: req.body.title,
@@ -90,7 +113,7 @@ export const createTrip = (req, res) => {
     pictures: req.body.pictures,
     state: 'INACTIVE',
     stages: req.body.stages,
-    manager: req.body.manager
+    manager: actor.id  // id of the logged user
   };
 
   const newTrip = new tripModel(trip);
@@ -129,15 +152,21 @@ export const cancelTrip = (req, res) => {
       res.status(500).send(err);
     } else if (trip) {
       if (trip.state === 'ACTIVE') {
-        trip.state = 'CANCELLED';
-        trip.reasonCancelled = req.query.reasonCancelled;
-        trip.save(err => {
-          if (err) {
-            res.status(500).send(err);
-          } else {
-            res.status(200).json(trip.cleanup());
-          }
-        });
+        const { actor } = res.locals;
+        if(actor.id === trip.manager) {
+          trip.state = 'CANCELLED';
+          trip.reasonCancelled = req.query.reasonCancelled;
+          trip.save(err => {
+            if (err) {
+              res.status(500).send(err);
+            } else {
+              res.status(200).json(trip.cleanup());
+            }
+          });
+        } else {
+          return res.status(403).send({ error: 'You are not authorized to cancel this trip' });
+        }
+        
       } else {
         res.status(400).send({ error: 'Trip is not ACTIVE' });
       }
@@ -151,9 +180,39 @@ export const cancelTrip = (req, res) => {
 export const publishTrip = (req, res) => {
   console.log(Date() + ' - PATCH /trips/' + req.params.tripId + '/publish');
 
-  // TODO: Check credentials (manager)
-  // TODO: Check that the trip belongs to the logged manager
-  // TODO: Check that the object id fulfills the regex (and return 404 if not)
+  tripModel.findById(req.params.tripId, (err, trip) => {
+    if (err) {
+      res.status(500).send(err);
+    } else if (trip) {
+      // Check that the trip is INACTIVE
+      if (trip.state !== 'INACTIVE') {
+        return res.status(400).send('The trip must be INACTIVE');
+      }
+
+      const { actor } = res.locals;
+      if(actor.id === trip.manager) {
+        trip.state = 'ACTIVE';
+        trip.save(err => {
+          if (err) {
+            res.status(500).send(err);
+          } else {
+            res.json(trip.cleanup());
+          }
+        });
+      } else {
+        return res.status(403).send({ error: 'You are not authorized to publish this trip' });
+      }
+
+      
+    } else {
+      res.status(404).send({ error: 'Trip not found' });
+    }
+  });
+};
+
+// A manager can update an INACTIVE trip that belongs to him
+export const updateTrip = (req, res) => {
+  console.log(Date() + ' - PUT /trips/' + req.params.tripId);
 
   tripModel.findById(req.params.tripId, (err, trip) => {
     if (err) {
@@ -164,34 +223,10 @@ export const publishTrip = (req, res) => {
         return res.status(400).send('The trip must be INACTIVE');
       }
 
-      trip.state = 'ACTIVE';
-      trip.save(err => {
-        if (err) {
-          res.status(500).send(err);
-        } else {
-          res.json(trip.cleanup());
-        }
-      });
-    } else {
-      res.status(404).send({ error: 'Trip not found' });
-    }
-  });
-};
+      const { actor } = res.locals;
 
-// A manager can update an INACTIVE trip that belongs to him
-export const updateTrip = (req, res) => {
-  console.log(Date() + ' - PUT /trips/' + req.params.tripId);
-  // TODO: Check credentials (manager)
-  // TODO: Check that the trip belongs to the logged manager
-  // TODO: Check that the object id fulfills the regex (and return 404 if not)
-
-  tripModel.findById(req.params.tripId, (err, trip) => {
-    if (err) {
-      res.status(500).send(err);
-    } else if (trip) {
-      // Check that the trip is INACTIVE
-      if (trip.state !== 'INACTIVE') {
-        return res.status(400).send('The trip must be INACTIVE');
+      if(actor.id !== trip.manager) {
+        return res.status(403).send({ error: 'You are not authorized to update this trip' });
       }
 
       var update = {
@@ -223,7 +258,6 @@ export const updateTrip = (req, res) => {
 };
 
 // Add a stage to an INACTIVE trip
-// TODO: Check that the trip belongs to the logged manager
 export const addStage = (req, res) => {
   console.log(Date() + ' - POST /trips/' + req.params.tripId + '/stages');
 
@@ -234,6 +268,11 @@ export const addStage = (req, res) => {
       // Check that the trip is INACTIVE
       if (trip.state !== 'INACTIVE') {
         return res.status(400).send('The trip must be INACTIVE');
+      }
+
+      const { actor } = res.locals;
+      if(actor.id !== trip.manager) {
+        return res.status(403).send({ error: 'You are not authorized to add a stage to this trip' });
       }
 
       // Get the stage from the body
@@ -266,7 +305,6 @@ export const addStage = (req, res) => {
 
 // Delete a stage from an INACTIVE trip
 export const deleteStage = (req, res) => {
-  // TODO: Check that the stage belongs to the logged manager
   console.log(Date() + ' - DELETE /trips/' + req.params.tripId + '/stages/' + req.params.stageId);
 
   tripModel.findById(req.params.tripId, (err, trip) => {
@@ -276,6 +314,11 @@ export const deleteStage = (req, res) => {
       // Check that the trip is INACTIVE
       if (trip.state !== 'INACTIVE') {
         return res.status(400).send({ error: 'The trip must be INACTIVE' });
+      }
+
+      const { actor } = res.locals;
+      if(actor.id !== trip.manager) {
+        return res.status(403).send({ error: 'You are not authorized to remove a stage from this trip' });
       }
 
       // Find the stage in the list of stages with the provided id or return 404
@@ -304,9 +347,6 @@ export const deleteStage = (req, res) => {
 
 // A manager can delete an INACTIVE trip that belongs to him
 export const deleteTrip = (req, res) => {
-  // TODO: Check that the user is logged in as a manager
-  // TODO: Check that the trip belongs to the logged manager
-  // TODO: Check that the object id fulfills the regex (and return 404 if not)
   console.log(Date() + ' - DELETE /trips/' + req.params.tripId);
 
   tripModel.findById(req.params.tripId, (err, trip) => {
@@ -316,6 +356,11 @@ export const deleteTrip = (req, res) => {
       // Check that the trip is INACTIVE
       if (trip.state !== 'INACTIVE') {
         return res.status(400).send({ error: 'The trip must be INACTIVE' });
+      }
+
+      const { actor } = res.locals;
+      if(actor.id !== trip.manager) {
+        return res.status(403).send({ error: 'You are not authorized to delete this trip' });
       }
 
       if (trip.stages.length == 1) {

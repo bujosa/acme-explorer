@@ -8,8 +8,11 @@ import {
   publishTrip,
   cancelTrip,
   deleteStage,
-  addStage
+  addStage,
+  findOneOfMyTrips
 } from '../controllers/tripController.js';
+import { Roles } from '../shared/enums.js';
+import { verifyUser } from '../controllers/authController.js';
 
 export const tripRoutes = app => {
   /**
@@ -54,7 +57,7 @@ export const tripRoutes = app => {
   app
     .route('/v1/trips')
     .get(findTrips)
-    .post(createTrip);
+    .post(verifyUser([Roles.MANAGER]), createTrip);
 
   /**
    * @openapi
@@ -121,21 +124,26 @@ export const tripRoutes = app => {
   app
     .route('/v1/trips/:tripId')
     .get(findTrip)
-    .put(updateTrip)
-    .delete(deleteTrip);
+    .put(verifyUser([Roles.MANAGER]), updateTrip)
+    .delete(verifyUser([Roles.MANAGER]), deleteTrip);
 
   /**
    * @section trips
    * @type get
    * @url /v1/myTrips
    */
-  app.route('/v1/myTrips').get(findMyTrips);
+  app.route('/v1/myTrips').get(verifyUser([Roles.MANAGER]), findMyTrips);
 
-  app.route('/v1/trips/:tripId/publish').patch(publishTrip);
+  app.route('/v1/myTrips/:tripId').get(verifyUser([Roles.MANAGER]), findOneOfMyTrips);
 
-  app.route('/v1/trips/:tripId/cancel').patch(cancelTrip);
+  app.route('/v1/trips/:tripId/publish').patch(verifyUser([Roles.MANAGER]), publishTrip);
 
-  app.route('/v1/trips/:tripId/stages/:stageId').delete(deleteStage);
+  app.route('/v1/trips/:tripId/cancel').patch(verifyUser([Roles.MANAGER]), cancelTrip);
 
-  app.route('/v1/trips/:tripId/stages').post(addStage);
+  app.route('/v1/trips/:tripId/stages/:stageId').delete(verifyUser([Roles.MANAGER]), deleteStage);
+
+  app.route('/v1/trips/:tripId/stages').post(verifyUser([Roles.MANAGER]), addStage);
+
+  
+
 };
