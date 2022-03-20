@@ -60,7 +60,6 @@ export const changeRebuildPeriod = function(req, res) {
       'Invalid rebuild period, accepted values: everyHour, everyMinute, everyTenSeconds, everySecond'
     );
   }
-  console.log(rebuildPeriod);
   computeDataWarehouseJob.setTime(new CronTime(rebuildPeriod));
   computeDataWarehouseJob.start();
 
