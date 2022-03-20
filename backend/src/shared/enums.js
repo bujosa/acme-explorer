@@ -22,3 +22,12 @@ export const Languages = {
   EN: 'en',
   ES: 'es'
 };
+
+export const Operator = {
+  'equal': '$eq',
+  'not equal': '$ne',
+  'greater than': '$gt',
+  'greater than or equal': '$gte',
+  'smaller than': '$lt',
+  'smaller than or equal': '$lte'
+};

@@ -9,7 +9,7 @@ import { dbConnection, dbClose } from './database.js';
 import { redisConnection, redisClose } from './redis.js';
 import { StatusCodes } from 'http-status-codes';
 import { errorHandler } from '../shared/middlewares/error-handler.js';
-import { createDataWareHouseJob } from '../controllers/dataWareHouseController.js';
+import { createDataWarehouseJob } from '../controllers/dataWarehouseController.js';
 import {
   actorRoutes,
   applicationRoutes,
@@ -18,7 +18,7 @@ import {
   finderRoutes,
   loginRoutes,
   registerRoutes,
-  dataWareHouseRoutes
+  dataWarehouseRoutes
 } from '../routes/index.js';
 
 export class Server {
@@ -51,7 +51,7 @@ export class Server {
     tripRoutes(this.app);
     loginRoutes(this.app);
     registerRoutes(this.app);
-    dataWareHouseRoutes(this.app);
+    dataWarehouseRoutes(this.app);
 
     this.app.use(errorHandler);
 
@@ -86,9 +86,9 @@ export class Server {
     return account;
   }
 
-  createDataWareHouseJob() {
+  createDataWarehouseJob() {
     if (process.env.NODE_ENV !== 'test') {
-      createDataWareHouseJob();
+      createDataWarehouseJob();
     }
   }
 

@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import moment from 'moment';
 import { ApplicationState } from '../shared/enums.js';
 
 const { Schema } = mongoose;

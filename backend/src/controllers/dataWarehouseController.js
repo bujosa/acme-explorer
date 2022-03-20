@@ -1,23 +1,26 @@
 import * as async from 'async';
+import { StatusCodes } from 'http-status-codes';
 
-import { dataWareHouseModel as DataWareHouse } from '../models/dataWareHouseModel.js';
+import { dataCubeModel, dataWarehouseModel as DataWarehouse } from '../models/dataWarehouseModel.js';
 import { tripModel } from '../models/tripModel.js';
 import { finderModel } from '../models/finderModel.js';
 import { applicationModel } from '../models/applicationModel.js';
 import { CronJob, CronTime } from 'cron';
+import { Operator } from '../shared/enums.js';
+import { InvalidRequest } from '../shared/exceptions.js';
 
 // '0 0 * * * *' Every hour
 // '*/30 * * * * *' Every 30 seconds
 // '*/10 * * * * *' Every 10 seconds
 // '* * * * * *' Every second
-let rebuildPeriod = '* * * * * *'; // Default
-let computeDataWareHouseJob;
+let rebuildPeriod = '0 0 * * * *'; // Default
+let computeDataWarehouseJob;
 
 // TODO: Add authentication
 export const listAllIndicators = (req, res) => {
   console.log('Requesting ALL indicators');
 
-  DataWareHouse.find()
+  DataWarehouse.find()
     .sort('-computationMoment')
     .exec(function(err, indicators) {
       if (err) {
@@ -32,7 +35,7 @@ export const listAllIndicators = (req, res) => {
 export const findLastIndicator = (req, res) => {
   console.log('Requesting LAST indicator');
 
-  DataWareHouse.find()
+  DataWarehouse.find()
     .sort('-computationMoment')
     .limit(1)
     .exec(function(err, indicators) {
@@ -48,17 +51,17 @@ export const findLastIndicator = (req, res) => {
 export const changeRebuildPeriod = function(req, res) {
   console.log('Updating rebuild period. Request period: ' + req.query.rebuildPeriod);
   rebuildPeriod = req.query.rebuildPeriod;
-  computeDataWareHouseJob.setTime(new CronTime(rebuildPeriod));
-  computeDataWareHouseJob.start();
+  computeDataWarehouseJob.setTime(new CronTime(rebuildPeriod));
+  computeDataWarehouseJob.start();
 
   res.json(req.query.rebuildPeriod);
 };
 
-export const createDataWareHouseJob = function createDataWareHouseJob() {
-  computeDataWareHouseJob = new CronJob(
+export const createDataWarehouseJob = function createDataWarehouseJob() {
+  computeDataWarehouseJob = new CronJob(
     rebuildPeriod,
     function() {
-      const newDataWareHouse = new DataWareHouse();
+      const newDataWarehouse = new DataWarehouse();
       console.log('Cron job submitted. Rebuild period: ' + rebuildPeriod);
       async.parallel(
         [
@@ -72,18 +75,18 @@ export const createDataWareHouseJob = function createDataWareHouseJob() {
           if (err) {
             console.log('Error saving datawarehouse: ' + err);
           } else {
-            newDataWareHouse.tripsPricesStatistics = results[0];
-            newDataWareHouse.tripsManagersStatistics = results[1];
-            newDataWareHouse.finderStatistics = results[2];
-            newDataWareHouse.applicationStatistics = results[3];
-            newDataWareHouse.ratioOfApplications = results[4];
-            newDataWareHouse.rebuildPeriod = rebuildPeriod;
+            newDataWarehouse.tripsPricesStatistics = results[0];
+            newDataWarehouse.tripsManagersStatistics = results[1];
+            newDataWarehouse.finderStatistics = results[2];
+            newDataWarehouse.applicationStatistics = results[3];
+            newDataWarehouse.ratioOfApplications = results[4];
+            newDataWarehouse.rebuildPeriod = rebuildPeriod;
 
-            newDataWareHouse.save(function(err, datawarehouse) {
+            newDataWarehouse.save(function(err, datawarehouse) {
               if (err) {
                 console.log('Error saving datawarehouse: ' + err);
               } else {
-                console.log('new DataWareHouse succesfully saved. Date: ' + new Date());
+                console.log('new DataWarehouse succesfully saved. Date: ' + new Date());
               }
             });
           }
@@ -94,6 +97,65 @@ export const createDataWareHouseJob = function createDataWareHouseJob() {
     true,
     'Europe/Madrid'
   );
+};
+
+export const findDataCube = async (req, res, next) => {
+  try {
+    const { query } = req;
+
+    if (query.v && query.operator && !Operator[query.operator]) {
+      return next(new InvalidRequest('The operations must be one of: ' + Object.keys(Operator).join(', ')));
+    }
+
+    const filter = {
+      ...(query.p ? { period: query.p } : {}),
+      ...(query.e ? { explorer: query.e } : {}),
+      ...(query.v && query.operator
+        ? {
+            totalSpent: {
+              [Operator[query.operator]]: query.v
+            }
+          }
+        : {})
+    };
+    const results = await dataCubeModel.find(filter);
+
+    res.json(results);
+  } catch (e) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(e.message);
+  }
+};
+
+export const createDataCube = async (req, res) => {
+  const dates = dataCubeModel.getPeriodDates();
+  const filter = dataCubeModel.getPeriodFilter(dates);
+
+  try {
+    await dataCubeModel.remove({});
+
+    const statistics = await applicationModel.aggregate([
+      {
+        $facet: filter
+      },
+      {
+        $project: {
+          result: {
+            $concatArrays: dates.map(filter => `$${filter.keyword}`)
+          }
+        }
+      },
+      {
+        $unwind: { path: '$result' }
+      },
+      {
+        $replaceRoot: { newRoot: '$result' }
+      }
+    ]);
+    const results = await dataCubeModel.insertMany(statistics);
+    res.json(results);
+  } catch (e) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(e.message);
+  }
 };
 
 function computeTripsPricesStatistics(callback) {

@@ -6,6 +6,6 @@ dotenv.config();
 const server = new Server();
 
 server.execute();
-server.createDataWareHouseJob();
+server.createDataWarehouseJob();
 
 export default server;

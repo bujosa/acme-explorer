@@ -11,7 +11,7 @@ export class BaseError extends Error {
   toClient() {
     return [
       {
-        message: this.messages
+        message: this.message
       }
     ];
   }

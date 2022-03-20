@@ -136,8 +136,8 @@ TripSchema.statics.getFinderQuery = function(query) {
           }
         }
       : {}),
-    ...(query.startDate ? { startDate: query.startDate } : {}),
-    ...(query.endDate ? { endDate: query.endDate } : {})
+    ...(query.startDate ? { startDate: { $gte: query.startDate } } : {}),
+    ...(query.endDate ? { endDate: { $lte: query.endDate } } : {})
   };
 };
 
