@@ -8,7 +8,7 @@ export const actor = m2s(actorModel, {
 export const loginPayload = {
   type: 'object',
   properties: {
-    username: {
+    email: {
       type: 'string'
     },
     password: {

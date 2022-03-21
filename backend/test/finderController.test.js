@@ -19,14 +19,13 @@ describe('Finder API endpoints', () => {
     };
     finderTest = {
       name: 'test.search.base',
-      actor: '6214cd93448c720973ba9623',
       minPrice: 100,
       maxPrice: 300
     };
-    token = await agent
-      .post('/v1/register')
-      .send(explorerTest)
-      .then(_ => Server.createIdTokenFromCustomToken(_.body.email));
+    const { body: actor } = await agent.post('/v1/register').send(explorerTest);
+
+    finderTest.actor = actor.id;
+    token = await Server.createIdTokenFromCustomToken(actor.email);
     return initTestDatabase(finderTest);
   });
 

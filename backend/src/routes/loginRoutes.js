@@ -11,7 +11,7 @@ export const loginRoutes = app => {
   /**
    * @openapi
    * /v1/login/:
-   *   get:
+   *   post:
    *     description: Return an actor with a token
    *     tags: [Login]
    *     security: []

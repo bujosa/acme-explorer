@@ -3,7 +3,7 @@ import Constants from '../shared/constants.js';
 import { finderModel } from '../models/finderModel.js';
 import { tripModel } from '../models/tripModel.js';
 import { configurationModel } from '../models/configurationModel.js';
-import { RecordNotFound } from '../shared/exceptions.js';
+import { RecordNotFound, UserForbidden } from '../shared/exceptions.js';
 import { redis } from '../config/redis.js';
 
 export const findFinders = async (req, res) => {
@@ -13,7 +13,7 @@ export const findFinders = async (req, res) => {
   perPage = perPage ? parseInt(perPage) : Constants.defaultPerPage;
   page = Math.max(0, page ?? 0);
 
-  if (actor.isExplorer()) {
+  if (!actor.isAdmin()) {
     query.actor = actor._id;
   }
 
@@ -37,10 +37,15 @@ export const findFinders = async (req, res) => {
 
 export const findFinder = async (req, res, next) => {
   try {
+    const { actor } = res.locals;
     const record = await finderModel.findById(req.params.finderId);
 
     if (!record) {
       return next(new RecordNotFound());
+    }
+
+    if (!actor.isAdmin() && record.actor.toString() !== actor._id.toString()) {
+      return next(new UserForbidden());
     }
 
     res.json(record);
@@ -50,7 +55,9 @@ export const findFinder = async (req, res, next) => {
 };
 
 export const createFinder = async (req, res) => {
-  const newFinder = new finderModel({ actor: res.locals.actor._id, ...req.body });
+  const { actor } = res.locals;
+  const $actor = actor.isAdmin() && req.body ? req.body.actor : actor._id.toString();
+  const newFinder = new finderModel({ ...req.body, actor: $actor });
 
   try {
     const finder = await newFinder.save();
@@ -66,8 +73,19 @@ export const createFinder = async (req, res) => {
   }
 };
 
-export const updateFinder = async (req, res) => {
+export const updateFinder = async (req, res, next) => {
   try {
+    const { actor } = res.locals;
+    const record = await finderModel.findById(req.params.finderId);
+
+    if (!record) {
+      return next(new RecordNotFound());
+    }
+
+    if (!actor.isAdmin() && record.actor.toString() !== actor._id.toString()) {
+      return next(new UserForbidden());
+    }
+
     const finder = await finderModel.findOneAndUpdate({ _id: req.params.finderId }, req.body, { new: true });
     res.json(finder);
   } catch (e) {
@@ -81,8 +99,19 @@ export const updateFinder = async (req, res) => {
   }
 };
 
-export const deleteFinder = async (req, res) => {
+export const deleteFinder = async (req, res, next) => {
   try {
+    const { actor } = res.locals;
+    const record = await finderModel.findById(req.params.finderId);
+
+    if (!record) {
+      return next(new RecordNotFound());
+    }
+
+    if (!actor.isAdmin() && record.actor.toString() !== actor._id.toString()) {
+      return next(new UserForbidden());
+    }
+
     await finderModel.deleteOne({ _id: req.params.finderId });
     res.sendStatus(StatusCodes.NO_CONTENT);
   } catch (e) {
@@ -92,10 +121,15 @@ export const deleteFinder = async (req, res) => {
 
 export const findFinderTrips = async (req, res, next) => {
   try {
+    const { actor } = res.locals;
     const record = await finderModel.findById(req.params.finderId);
 
     if (!record) {
       return next(new RecordNotFound());
+    }
+
+    if (!actor.isAdmin() && record.actor.toString() !== actor._id.toString()) {
+      return next(new UserForbidden());
     }
 
     const query = record.toRedis();

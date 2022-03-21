@@ -13,16 +13,15 @@ describe('Actor API endpoints', () => {
   let agent, admin, token;
 
   const fakeActor = (lastName = faker.lorem.word()) => {
-    return { 
+    return {
       name: faker.name.firstName(),
       surname: faker.name.lastName(),
-      email: faker.internet.email('fake',lastName),
+      email: faker.internet.email('fake', lastName),
       password: faker.internet.password()
     };
-  }
+  };
 
   const createActor = async (lastName = faker.lorem.word(), role = Roles.EXPLORER) => {
-
     const password = faker.lorem.word(6);
     const email = faker.internet.email('fake', lastName);
 
@@ -33,13 +32,13 @@ describe('Actor API endpoints', () => {
       password,
       role
     });
-    
+
     await entity.save();
 
     return { email, password, _id: entity._id };
-  }
+  };
 
-  const createMyCustomToken = async (user) => {
+  const createMyCustomToken = async user => {
     return agent
       .post('/v1/login')
       .send(user)
@@ -72,7 +71,7 @@ describe('Actor API endpoints', () => {
 
       // Assert
       const response = await agent.set('idtoken', token).get(`/v1/self`);
-      
+
       // Assert
       expect(response.statusCode).toBe(StatusCodes.FORBIDDEN);
     });
@@ -123,8 +122,8 @@ describe('Actor API endpoints', () => {
         email: faker.lorem.word(),
         password: faker.lorem.word(6),
         name: faker.name.firstName(),
-        surname: faker.name.lastName(),
-      }
+        surname: faker.name.lastName()
+      };
 
       // Act
       const response = await agent.post(`/v1/register`).send(newActor);
@@ -140,8 +139,8 @@ describe('Actor API endpoints', () => {
         ...actor,
         password: faker.lorem.word(6),
         name: faker.name.firstName(),
-        surname: faker.name.lastName(),
-      }
+        surname: faker.name.lastName()
+      };
 
       // Act
       const response = await agent.post(`/v1/register`).send(newActor);
@@ -164,7 +163,7 @@ describe('Actor API endpoints', () => {
 
       // Assert
       const response = await agent.set('idtoken', token).get(`${base}`);
-      
+
       // Assert
       expect(response.statusCode).toBe(StatusCodes.FORBIDDEN);
     });
@@ -176,7 +175,7 @@ describe('Actor API endpoints', () => {
 
       // Assert
       const response = await agent.set('idtoken', token).get(`${base}`);
-      
+
       // Assert
       expect(response.statusCode).toBe(StatusCodes.FORBIDDEN);
     });
@@ -185,19 +184,19 @@ describe('Actor API endpoints', () => {
   describe('FindActor', () => {
     test('should return an actor', async () => {
       // Arrange
-      const actor = await actorModel.findOne({email: admin.email});
+      const actor = await actorModel.findOne({ email: admin.email });
 
       // Act
       const response = await agent.set('idtoken', token).get(`${base}/${actor._id}`);
-      
+
       // Assert
       expect(response.statusCode).toBe(StatusCodes.OK);
       expect(response.body).toBeInstanceOf(Object);
     });
 
     test('should return not found if the actor does not exist', async () => {
-      // Arrange 
-      const actor = {_id: new mongoose.Types.ObjectId().toHexString()};
+      // Arrange
+      const actor = { _id: new mongoose.Types.ObjectId().toHexString() };
 
       // Act
       const response = await agent.set('idtoken', token).get(`${base}/${actor._id}`);
@@ -208,26 +207,25 @@ describe('Actor API endpoints', () => {
 
     test('should throw FORBIDDEN if the token its not provider', async () => {
       // Act
-      const actor = await actorModel.findOne({email: admin.email});
+      const actor = await actorModel.findOne({ email: admin.email });
       const token = null;
 
       // Assert
       const response = await agent.set('idtoken', token).get(`${base}/${actor._id}`);
-      
+
       // Assert
       expect(response.statusCode).toBe(StatusCodes.FORBIDDEN);
     });
 
     test('should throw FORBIDDEN if the actor its not admin', async () => {
       // Act
-      const actor = await actorModel.findOne({email: admin.email});
+      const actor = await actorModel.findOne({ email: admin.email });
       const noAdminActor = await createActor(faker.lorem.word(4));
       const token = await createMyCustomToken(noAdminActor);
 
       // Assert
       const response = await agent.set('idtoken', token).get(`${base}/${actor._id}`);
-      
-      
+
       // Assert
       expect(response.statusCode).toBe(StatusCodes.FORBIDDEN);
     });
@@ -237,11 +235,11 @@ describe('Actor API endpoints', () => {
     test('should return a banned actor', async () => {
       // Arrange
       const newActor = await createActor(faker.lorem.word(3));
-      const actor = await actorModel.findOne({email: newActor.email});
+      const actor = await actorModel.findOne({ email: newActor.email });
 
       // Act
       const response = await agent.set('idtoken', token).patch(`${base}/${actor._id}/ban`);
-      
+
       // Assert
       expect(response.statusCode).toBe(StatusCodes.OK);
       expect(response.body).toBeInstanceOf(Object);
@@ -250,13 +248,13 @@ describe('Actor API endpoints', () => {
 
     test('should throw FORBIDDEN if the actor its not admin', async () => {
       // Act
-      const actor = await actorModel.findOne({email: admin.email});
+      const actor = await actorModel.findOne({ email: admin.email });
       const noAdminActor = await createActor(faker.lorem.word(2));
       const token = await createMyCustomToken(noAdminActor);
 
       // Assert
       const response = await agent.set('idtoken', token).patch(`${base}/${actor._id}/ban`);
-      
+
       // Assert
       expect(response.statusCode).toBe(StatusCodes.FORBIDDEN);
     });
@@ -266,12 +264,12 @@ describe('Actor API endpoints', () => {
     test('should return an unbanned actor', async () => {
       // Arrange
       const newActor = await createActor(faker.lorem.word(1));
-      const actor = await actorModel.findOne({email: newActor.email});
+      const actor = await actorModel.findOne({ email: newActor.email });
 
       // Act
       await agent.set('idtoken', token).patch(`${base}/${actor._id}/ban`);
-      const response = await agent.set('idtoken', token).patch(`${base}/${actor._id}/unban`); 
-      
+      const response = await agent.set('idtoken', token).patch(`${base}/${actor._id}/unban`);
+
       // Assert
       expect(response.statusCode).toBe(StatusCodes.OK);
       expect(response.body).toBeInstanceOf(Object);
@@ -280,13 +278,13 @@ describe('Actor API endpoints', () => {
 
     test('should throw FORBIDDEN if the actor its not admin', async () => {
       // Act
-      const actor = await actorModel.findOne({email: admin.email});
+      const actor = await actorModel.findOne({ email: admin.email });
       const noAdminActor = await createActor(faker.lorem.word(2));
       const token = await createMyCustomToken(noAdminActor);
 
       // Assert
-      const response = await agent.set('idtoken', token).patch(`${base}/${actor._id}/unban`); 
-      
+      const response = await agent.set('idtoken', token).patch(`${base}/${actor._id}/unban`);
+
       // Assert
       expect(response.statusCode).toBe(StatusCodes.FORBIDDEN);
     });
@@ -296,24 +294,24 @@ describe('Actor API endpoints', () => {
     test('should delete an actor', async () => {
       // Arrange
       const newActor = await createActor(faker.lorem.word(13));
-      const actor = await actorModel.findOne({email: newActor.email});
+      const actor = await actorModel.findOne({ email: newActor.email });
 
       // Act
       const response = await agent.set('idtoken', token).delete(`${base}/${actor._id}`);
-      
+
       // Assert
       expect(response.statusCode).toBe(StatusCodes.NO_CONTENT);
     });
 
     test('should throw FORBIDDEN if the actor its not admin', async () => {
       // Act
-      const actor = await actorModel.findOne({email: admin.email});
+      const actor = await actorModel.findOne({ email: admin.email });
       const noAdminActor = await createActor(faker.lorem.word(2));
       const token = await createMyCustomToken(noAdminActor);
 
       // Assert
       const response = await agent.set('idtoken', token).delete(`${base}/${actor._id}`);
-      
+
       // Assert
       expect(response.statusCode).toBe(StatusCodes.FORBIDDEN);
     });
@@ -323,47 +321,56 @@ describe('Actor API endpoints', () => {
     test('should update an actor information', async () => {
       // Arrange
       const newInfo = {
-        name: faker.name.firstName(),
+        name: faker.name.firstName()
       };
-      const actor = await actorModel.findOne({email: admin.email});
+      const actor = await actorModel.findOne({ email: admin.email });
 
       // Act
-      const response = await agent.set('idtoken', token).put(`${base}/${actor._id}`).send(newInfo);
+      const response = await agent
+        .set('idtoken', token)
+        .put(`${base}/${actor._id}`)
+        .send(newInfo);
 
       // Assert
       expect(response.statusCode).toBe(StatusCodes.OK);
       expect(response.body).toBeInstanceOf(Object);
     });
- 
+
     test('should throw METHOD NOT ALLOWED if the actor is not admin, and is trying to update another resource that is not his.', async () => {
       // Arrange
       const newInfo = {
-        name: faker.name.firstName(),
+        name: faker.name.firstName()
       };
       const otherActor = await createActor(faker.lorem.word(10));
       const customToken = await createMyCustomToken(otherActor);
-      const actor = await actorModel.findOne({email: admin.email});
+      const actor = await actorModel.findOne({ email: admin.email });
 
       // Act
-      const response = await agent.set('idtoken', customToken).put(`${base}/${actor._id}`).send(newInfo);
+      const response = await agent
+        .set('idtoken', customToken)
+        .put(`${base}/${actor._id}`)
+        .send(newInfo);
 
       // Assert
       expect(response.statusCode).toBe(StatusCodes.METHOD_NOT_ALLOWED);
     });
 
     test.only('should not update the role and state fields if the actor is not admin', async () => {
-       // Arrange
+      // Arrange
       const newInfo = {
         name: faker.name.firstName(),
         role: Roles.MANAGER,
-        state: BasicState.INACTIVE,
+        state: BasicState.INACTIVE
       };
 
       const otherActor = await createActor(faker.lorem.word(16));
       const customToken = await createMyCustomToken(otherActor);
 
       // Act
-      const response = await agent.set('idtoken', customToken).put(`${base}/${otherActor._id}`).send(newInfo);
+      const response = await agent
+        .set('idtoken', customToken)
+        .put(`${base}/${otherActor._id}`)
+        .send(newInfo);
 
       // Assert
       expect(response.statusCode).toBe(StatusCodes.OK);
@@ -379,7 +386,10 @@ describe('Actor API endpoints', () => {
       const actor = fakeActor(faker.lorem.word(14));
 
       // Act
-      const response = await agent.set('idtoken', token).post(`${base}`).send(actor);
+      const response = await agent
+        .set('idtoken', token)
+        .post(`${base}`)
+        .send(actor);
 
       // Assert
       expect(response.statusCode).toBe(StatusCodes.OK);
@@ -393,13 +403,13 @@ describe('Actor API endpoints', () => {
       const token = await createMyCustomToken(noAdminActor);
 
       // Assert
-      const response = await agent.set('idtoken', token).post(`${base}`).send(actor);
+      const response = await agent
+        .set('idtoken', token)
+        .post(`${base}`)
+        .send(actor);
 
       // Assert
       expect(response.statusCode).toBe(StatusCodes.FORBIDDEN);
     });
-
   });
 });
-
-

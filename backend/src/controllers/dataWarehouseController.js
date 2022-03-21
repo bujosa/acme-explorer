@@ -161,7 +161,7 @@ export const createDataCube = async (req, res) => {
       }
     ]);
     const results = await dataCubeModel.insertMany(statistics);
-    res.json(results);
+    res.status(StatusCodes.CREATED).json(results);
   } catch (e) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(e.message);
   }

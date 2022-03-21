@@ -130,6 +130,12 @@ export const finderRoutes = app => {
    *   get:
    *     description: Returns a list of all the trips in a finder
    *     tags: [Finders]
+   *     parameters:
+   *        - name: finderId
+   *          type: string
+   *          in: path
+   *          required: true
+   *          description: The finder id
    *     responses:
    *       200:
    *         description: List of trips in a finder

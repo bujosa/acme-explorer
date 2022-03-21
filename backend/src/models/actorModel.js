@@ -62,6 +62,18 @@ ActorSchema.methods.isExplorer = function() {
   return this.role === Roles.EXPLORER;
 };
 
+ActorSchema.methods.isSponsor = function() {
+  return this.role === Roles.SPONSOR;
+};
+
+ActorSchema.methods.isAdmin = function() {
+  return this.role === Roles.ADMIN;
+};
+
+ActorSchema.methods.isManager = function() {
+  return this.role === Roles.MANAGER;
+};
+
 ActorSchema.set('toJSON', {
   transform: function(doc, ret) {
     ret.id = ret._id;

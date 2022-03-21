@@ -18,7 +18,8 @@ import {
   finderRoutes,
   loginRoutes,
   registerRoutes,
-  dataWarehouseRoutes
+  dataWarehouseRoutes,
+  configurationRoutes
 } from '../routes/index.js';
 
 export class Server {
@@ -52,6 +53,7 @@ export class Server {
     loginRoutes(this.app);
     registerRoutes(this.app);
     dataWarehouseRoutes(this.app);
+    configurationRoutes(this.app);
 
     this.app.use(errorHandler);
 

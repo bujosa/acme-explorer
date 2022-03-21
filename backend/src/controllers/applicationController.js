@@ -115,7 +115,7 @@ export const findMyApplications = async (req, res) => {
         },
         {
           $match: {
-            "trip_info.manager": actor._id
+            'trip_info.manager': actor._id
           }
         }
       ]);

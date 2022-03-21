@@ -166,25 +166,30 @@ export const cancelTrip = (req, res) => {
         const { actor } = res.locals;
         if (actor.id === trip.manager.toString()) {
           // Count the number of accepted applications of the trip
-          
-          applicationModel.countDocuments({ trip: mongoose.Types.ObjectId(trip.id), state: ApplicationState.ACCEPTED }, (err, count) => {
-            if (err) {
-              res.status(500).send(err);
-            } else if (count > 0) {
-              console.log(count);
-              return res.status(400).send({ error: 'The trip cannot be cancelled because it has accepted applications' });
-            } else {
-              trip.state = 'CANCELLED';
-              trip.reasonCancelled = req.query.reasonCancelled;
-              trip.save((err, trip) => {
-                if (err) {
-                  res.status(500).send(err);
-                } else {
-                  res.json(trip.cleanup());
-                }
-              });
+
+          applicationModel.countDocuments(
+            { trip: mongoose.Types.ObjectId(trip.id), state: ApplicationState.ACCEPTED },
+            (err, count) => {
+              if (err) {
+                res.status(500).send(err);
+              } else if (count > 0) {
+                console.log(count);
+                return res
+                  .status(400)
+                  .send({ error: 'The trip cannot be cancelled because it has accepted applications' });
+              } else {
+                trip.state = 'CANCELLED';
+                trip.reasonCancelled = req.query.reasonCancelled;
+                trip.save((err, trip) => {
+                  if (err) {
+                    res.status(500).send(err);
+                  } else {
+                    res.json(trip.cleanup());
+                  }
+                });
+              }
             }
-          });
+          );
         } else {
           return res.status(403).send({ error: 'You are not authorized to cancel this trip' });
         }
