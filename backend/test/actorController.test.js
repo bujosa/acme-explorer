@@ -36,7 +36,7 @@ describe('Actor API endpoints', () => {
     
     await entity.save();
 
-    return { email, password };
+    return { email, password, _id: entity._id };
   }
 
   const createMyCustomToken = async (user) => {
@@ -349,6 +349,27 @@ describe('Actor API endpoints', () => {
 
       // Assert
       expect(response.statusCode).toBe(StatusCodes.METHOD_NOT_ALLOWED);
+    });
+
+    test.only('should not update the role and state fields if the actor is not admin', async () => {
+       // Arrange
+      const newInfo = {
+        name: faker.name.firstName(),
+        role: Roles.MANAGER,
+        state: BasicState.INACTIVE,
+      };
+
+      const otherActor = await createActor(faker.lorem.word(16));
+      const customToken = await createMyCustomToken(otherActor);
+
+      // Act
+      const response = await agent.set('idtoken', customToken).put(`${base}/${otherActor._id}`).send(newInfo);
+
+      // Assert
+      expect(response.statusCode).toBe(StatusCodes.OK);
+      expect(response.body).toBeInstanceOf(Object);
+      expect(response.body.role).toBe(Roles.EXPLORER);
+      expect(response.body.state).toBe(BasicState.ACTIVE);
     });
   });
 

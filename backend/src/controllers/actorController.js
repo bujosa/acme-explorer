@@ -51,6 +51,7 @@ export const updateActor = async (req, res) => {
     if (!actor) {
       res.status(StatusCodes.UNAUTHORIZED).send('Not authorized');
     } else if (actor.role === Roles.ADMIN || actor.id === req.params.actorId) {
+      if(actor.role !== Roles.ADMIN) { delete req.body.role; delete req.body.state;}
       const result = await actorModel.findOneAndUpdate({ _id: req.params.actorId }, req.body, { new: true });
       res.json(result);
     } else {
