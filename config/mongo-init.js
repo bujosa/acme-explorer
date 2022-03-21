@@ -103,7 +103,8 @@ function getActorsData() {
 }
 
 function getTripsData({users}) {
-    const now = new Date();
+    const oneDay = 86400000;
+    const now = new Date((new Date()).getTime() + oneDay * 7);
     const ticker = now.getFullYear().toString().substr(-2)
         + (now.getMonth() + 1).toString().padStart(2, '0') + (now.getDate()).toString().padStart(2, '0');
     const templates = [
@@ -137,7 +138,7 @@ function getTripsData({users}) {
         "price": template.price,
         "requirements": ["Sólo para mayores de 18",],
         "startDate": now,
-        "endDate": new Date(now.getTime() + 86400000),
+        "endDate": new Date(now.getTime() + oneDay),
         "pictures": [],
         "state": template.state || "INACTIVE",
         "stages": [

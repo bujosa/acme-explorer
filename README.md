@@ -54,6 +54,19 @@ When the container is created, the database is populated with some actors (all r
 
 The API is documented with Swagger. Check it out on: `http://localhost:3000/docs/`.
 
+## Tips
+
+You can login (get the `idToken` from firebase without the frontend) by doing the following:
+   ```
+   POST: https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyCustomToken?key=[FIREBASE_API_KEY]
+   Body: {
+      "token": "[customToken from login endpoint]",
+      "returnSecureToken": true
+   }
+   ```
+
+Please see the following [video for an example](https://drive.google.com/file/d/1031sq77T37m6ZO1Etd09oMV9nWmXomYi/view?usp=sharing).
+
 ## Troubleshooting
 If when starting the container, an error appears indicating that there is a package/library missing, run the following command in a different command shell and install the missing packages.
    ```
