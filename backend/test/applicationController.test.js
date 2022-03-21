@@ -101,8 +101,8 @@ describe('Applications API endpoints', () => {
     const firstTripData = {
       title: 'test.trip',
       description: 'This is a test trip',
-      startDate: '2022-03-25',
-      endDate: '2022-03-28',
+      startDate: '2023-03-25',
+      endDate: '2023-03-28',
       manager: manager._id,
       state: 'ACTIVE',
       stages: [
