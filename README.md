@@ -32,3 +32,27 @@
    This is going to create a ready machine for the `frontend`, `backend`, `redis` and `mongo` where all packages are going to be installed. After that just navigate to localhost.
 
 Alternatively check the README for the `backend` or `frontend` directory if you want to run them individually. 
+
+## Basic use
+To start the local server, run the command:
+   ```
+   docker-compose up backend
+   ```
+## Populate
+When the container is created, the database is populated with some actors (all roles), trips, configuration, sponsorships and finders. By default, the users are (password: abc123):
+
+- explorer@test.com
+- manager@test.com
+- sponsor@test.com
+- admin@test.com
+
+## Troubleshooting
+If when starting the container, an error appears indicating that there is a package/library missing, run the following command in a different command shell and install the missing packages.
+   ```
+   docker exec -it backend sh
+   ```
+
+If you have mongo installed in your local machine, there may be collissions when trying to use MongoDBCompass. If you wishto use mongoDBCompass, replace the port 27017:27017 with 27018:27017 in the docker-compose.yml. To connect with the database in MongoDBCompass:
+   ```
+   mongodb://admin:explorer123@127.0.0.1:27018
+   ```
