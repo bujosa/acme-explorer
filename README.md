@@ -46,6 +46,10 @@ When the container is created, the database is populated with some actors (all r
 - sponsor@test.com
 - admin@test.com
 
+## Documentation
+
+The API is documented with Swagger. Check it out on: `http://localhost:3000/docs/`.
+
 ## Troubleshooting
 If when starting the container, an error appears indicating that there is a package/library missing, run the following command in a different command shell and install the missing packages.
    ```
