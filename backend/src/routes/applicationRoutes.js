@@ -250,6 +250,16 @@ export const applicationRoutes = app => {
    *         type: string
    *         in: path
    *         required: true
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               reasonRejected:
+   *                 type: string
+   *                 description: You must add a reason of rejection
    *     responses:
    *       200:
    *         description: The rejected application description by id
