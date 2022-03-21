@@ -11,7 +11,8 @@ import {
   payApplication,
   acceptApplication,
   rejectApplication,
-  findMyApplications
+  findMyApplications,
+  applyToTrip
 } from '../controllers/applicationController.js';
 
 export const applicationRoutes = app => {
@@ -57,7 +58,37 @@ export const applicationRoutes = app => {
   app
     .route('/v1/applications')
     .get(verifyUser([Roles.ADMIN]), findAllApplications)
-    .post(verifyUser(EXPLORER), createApplication);
+    .post(verifyUser([Roles.ADMIN]), createApplication);
+
+  /**
+   * @openapi
+   * /v1/applications/apply:
+   *   post:
+   *      description: Apply to a trip
+   *      tags: [Applications]
+   *      requestBody:
+   *        required: true
+   *        content:
+   *          application/json:
+   *            schema:
+   *              type: object
+   *              properties:
+   *                trip:
+   *                  type: string
+   *                  description: This is the trip id provided by mongo
+   *                comments:
+   *                  type: array
+   *                  items:
+   *                    type: string
+   *      responses:
+   *        201:
+   *          description: The application was successfully created
+   *          content:
+   *            application/json:
+   *              schema:
+   *                $ref: '#/components/schemas/application'
+   */
+  app.route('/v1/applications/apply').post(verifyUser([Roles.EXPLORER]), applyToTrip);
 
   /**
    * @openapi

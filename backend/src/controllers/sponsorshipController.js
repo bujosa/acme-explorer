@@ -4,6 +4,7 @@ import { actorModel } from '../models/actorModel.js';
 import { configurationModel } from '../models/configurationModel.js';
 import { RecordNotFound } from '../shared/exceptions.js';
 import { BasicState, Roles } from '../shared/enums.js';
+import { tripModel } from '../models/tripModel.js';
 
 export const findAllSponsorships = async (req, res) => {
   try {
@@ -27,10 +28,9 @@ export const findAllSponsorships = async (req, res) => {
 export const createSponsorship = async (req, res) => {
   try {
     const { actor } = res.locals;
-
     const { role } = await actorModel.findById(req.body.sponsor);
 
-    if (!(actor.role === Roles.SPONSOR || actor.role === Roles.ADMIN)) {
+    if (actor.role !== Roles.ADMIN) {
       return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation');
     }
 
@@ -50,6 +50,44 @@ export const createSponsorship = async (req, res) => {
   }
 };
 
+export const sponsorTrip = async (req, res) => {
+  try {
+    const { actor } = res.locals;
+
+    if (Object.keys(req.body).length === 0) {
+      return res.status(StatusCodes.BAD_REQUEST).send('You need to send a trip id, a banner and a link');
+    }
+
+    const { startDate, state: tripStage } = await tripModel.findById(req.body.trip);
+
+    if (actor.role !== Roles.SPONSOR) {
+      return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation');
+    }
+
+    if (startDate < new Date()) {
+      return res.status(StatusCodes.METHOD_NOT_ALLOWED).send("Can't sponsor a trip in the past.");
+    }
+
+    if (tripStage !== 'ACTIVE') {
+      return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You can only sponsor active trips');
+    }
+
+    const newSponsor = new sponsorshipModel({
+      ...req.body,
+      sponsor: actor._id,
+      state: 'inactive'
+    });
+    const sponsor = await newSponsor.save();
+    return res.status(StatusCodes.CREATED).json(sponsor);
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      res.status(StatusCodes.UNPROCESSABLE_ENTITY).json(error);
+    } else {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+    }
+  }
+};
+
 export const findMySponsorships = async (req, res) => {
   try {
     const { actor } = res.locals;
@@ -58,7 +96,7 @@ export const findMySponsorships = async (req, res) => {
       return res.status(StatusCodes.UNAUTHORIZED).send('Not authorized');
     }
 
-    if (!(actor.role === Roles.SPONSOR || actor.role === Roles.ADMIN)) {
+    if (actor.role !== Roles.SPONSOR) {
       return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation');
     }
 
@@ -103,6 +141,11 @@ export const updateSponsorship = async (req, res) => {
 
     if (!(actor.role === Roles.ADMIN || actor._id.toString() === sponsor.toString())) {
       return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation.');
+    }
+
+    if (actor.role !== Roles.ADMIN) {
+      delete req.body.state;
+      delete req.body.trip;
     }
 
     const sponsorship = await sponsorshipModel.findOneAndUpdate({ _id: req.params.sponsorshipId }, req.body, {
@@ -155,7 +198,8 @@ export const paySponsorship = async (req, res) => {
     if (isPaymentApproved) {
       const activeSponsorship = await sponsorshipModel.findOneAndUpdate(
         { _id: req.params.sponsorshipId },
-        { state: BasicState.ACTIVE }
+        { state: BasicState.ACTIVE },
+        { new: true }
       );
       return res.json(activeSponsorship);
     }

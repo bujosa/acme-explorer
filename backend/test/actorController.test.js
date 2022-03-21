@@ -355,7 +355,7 @@ describe('Actor API endpoints', () => {
       expect(response.statusCode).toBe(StatusCodes.METHOD_NOT_ALLOWED);
     });
 
-    test.only('should not update the role and state fields if the actor is not admin', async () => {
+    test('should not update the role and state fields if the actor is not admin', async () => {
       // Arrange
       const newInfo = {
         name: faker.name.firstName(),

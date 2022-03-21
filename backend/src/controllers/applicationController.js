@@ -31,13 +31,9 @@ export const findAllApplications = async (req, res, next) => {
 export const createApplication = async (req, res) => {
   try {
     const { actor } = res.locals;
+    const { role } = await actorModel.findById(req.body.explorer);
 
-    const { trip, explorer } = req.body;
-
-    const { startDate } = await tripModel.findById(trip);
-    const { role } = await actorModel.findById(explorer);
-
-    if (!(actor.role === Roles.EXPLORER || actor.role === Roles.ADMIN)) {
+    if (actor.role !== Roles.ADMIN) {
       return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation');
     }
 
@@ -45,11 +41,46 @@ export const createApplication = async (req, res) => {
       return res.status(StatusCodes.BAD_REQUEST).send('The provided actor must be an explorer');
     }
 
-    if (startDate < new Date()) {
-      return res.status(StatusCodes.BAD_REQUEST).send("Can't apply to a trip in the past.");
+    const newApplication = new applicationModel(req.body);
+    const application = await newApplication.save();
+    return res.status(StatusCodes.CREATED).json(application);
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      res.status(StatusCodes.UNPROCESSABLE_ENTITY).json(error);
+    } else {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+    }
+  }
+};
+
+export const applyToTrip = async (req, res) => {
+  try {
+    const { actor } = res.locals;
+
+    if (Object.keys(req.body).length === 0) {
+      return res.status(StatusCodes.BAD_REQUEST).send('You need to send a trip id and some optional comments.');
     }
 
-    const newApplication = new applicationModel(req.body);
+    const { startDate, state: tripStage } = await tripModel.findById(req.body.trip);
+
+    if (actor.role !== Roles.EXPLORER) {
+      return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation');
+    }
+
+    if (startDate < new Date()) {
+      return res.status(StatusCodes.METHOD_NOT_ALLOWED).send("Can't apply to a trip in the past.");
+    }
+
+    if (tripStage !== 'ACTIVE') {
+      return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You can only apply to active trips');
+    }
+
+    const newApplication = new applicationModel({
+      ...req.body,
+      explorer: actor._id,
+      state: 'pending',
+      reasonRejected: null
+    });
     const application = await newApplication.save();
     return res.status(StatusCodes.CREATED).json(application);
   } catch (error) {
@@ -142,6 +173,11 @@ export const updateApplication = async (req, res) => {
       return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation.');
     }
 
+    if (actor.role !== Roles.ADMIN) {
+      delete req.body.state;
+      delete req.body.reasonRejected;
+    }
+
     const application = await applicationModel.findOneAndUpdate({ _id: req.params.applicationId }, req.body, {
       new: true
     });
@@ -185,13 +221,7 @@ export const acceptApplication = async (req, res, next) => {
       return next(new RecordNotFound());
     }
 
-    if (
-      !(
-        actor._id.toString() === application.trip.manager.toString() ||
-        actor.role === Roles.MANAGER ||
-        actor.role === Roles.ADMIN
-      )
-    ) {
+    if (!(actor.role === Roles.ADMIN || actor._id.toString() === application.trip.manager.toString())) {
       return res.status(StatusCodes.FORBIDDEN).send('You do not have access.');
     }
 
@@ -216,21 +246,14 @@ export const acceptApplication = async (req, res, next) => {
 export const rejectApplication = async (req, res, next) => {
   try {
     const { actor } = res.locals;
-
-    const application = await applicationModel.findById(req.params.applicationId);
-
-    if (
-      !(
-        actor._id.toString() === application.trip.manager.toString() ||
-        actor.role === Roles.MANAGER ||
-        actor.role === Roles.ADMIN
-      )
-    ) {
-      return res.status(StatusCodes.FORBIDDEN).send('You do not have access.');
-    }
+    const application = await applicationModel.findById(req.params.applicationId).populate('trip');
 
     if (!application) {
       return next(new RecordNotFound());
+    }
+
+    if (!(actor.role === Roles.ADMIN || actor._id.toString() === application.trip.manager.toString())) {
+      return res.status(StatusCodes.FORBIDDEN).send('You do not have access.');
     }
 
     if (application.state !== ApplicationState.PENDING) {
@@ -311,7 +334,7 @@ export const payApplication = async (req, res, next) => {
       return res.status(StatusCodes.UNAUTHORIZED).send('Not authorized.');
     }
 
-    if (!(actor.role === Roles.ADMIN || actor._id.toString() === application.exponsor.toString())) {
+    if (!(actor.role === Roles.ADMIN || actor._id.toString() === application.explorer.toString())) {
       return res.status(StatusCodes.METHOD_NOT_ALLOWED).send('You cannot perform this operation.');
     }
 

@@ -9,7 +9,8 @@ import {
   deleteSponsorship,
   paySponsorship,
   configureFlatRate,
-  findMySponsorships
+  findMySponsorships,
+  sponsorTrip
 } from '../controllers/sponsorshipController.js';
 
 export const sponsorshipRoutes = app => {
@@ -55,7 +56,39 @@ export const sponsorshipRoutes = app => {
   app
     .route('/v1/sponsorships')
     .get(verifyUser([Roles.ADMIN]), findAllSponsorships)
-    .post(verifyUser(SPONSOR), createSponsorship);
+    .post(verifyUser([Roles.ADMIN]), createSponsorship);
+
+  /**
+   * @openapi
+   * /v1/sponsorships/sponsortrip:
+   *   post:
+   *      description: Create a sponsorship for a trip
+   *      tags: [Sponsorships]
+   *      requestBody:
+   *        required: true
+   *        content:
+   *          application/json:
+   *            schema:
+   *              type: object
+   *              properties:
+   *                trip:
+   *                  type: string
+   *                  description: This is the trip id provided by mongo
+   *                banner:
+   *                  type: string
+   *                  description: This is the link for the banner image
+   *                link:
+   *                  type: string
+   *                  description: This is the link for the landing page
+   *      responses:
+   *        201:
+   *          description: The sponsorship was successfully created
+   *          content:
+   *            application/json:
+   *              schema:
+   *                $ref: '#/components/schemas/sponsorship'
+   */
+  app.route('/v1/sponsorships/sponsortrip').post(verifyUser([Roles.SPONSOR]), sponsorTrip);
 
   /**
    * @openapi
