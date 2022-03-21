@@ -2,6 +2,8 @@ import { tripModel } from '../models/tripModel.js';
 import { applicationModel } from '../models/applicationModel.js';
 import Constants from '../shared/constants.js';
 import { StatusCodes } from 'http-status-codes';
+import { ApplicationState } from '../shared/enums.js';
+import mongoose from 'mongoose';
 
 // Find one trip by id, no login required
 export const findTrip = async (req, res) => {
@@ -164,11 +166,13 @@ export const cancelTrip = (req, res) => {
         const { actor } = res.locals;
         if (actor.id === trip.manager.toString()) {
           // Count the number of accepted applications of the trip
-          applicationModel.countDocuments({ trip: trip.id, state: 'ACCEPTED' }, (err, count) => {
+          
+          applicationModel.countDocuments({ trip: mongoose.Types.ObjectId(trip.id), state: ApplicationState.ACCEPTED }, (err, count) => {
             if (err) {
               res.status(500).send(err);
             } else if (count > 0) {
-              return res.status(400).send({ error: 'The trip cannot be cancelled because it has applications' });
+              console.log(count);
+              return res.status(400).send({ error: 'The trip cannot be cancelled because it has accepted applications' });
             } else {
               trip.state = 'CANCELLED';
               trip.reasonCancelled = req.query.reasonCancelled;
