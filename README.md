@@ -80,4 +80,4 @@ If you have mongo installed in your local machine, there may be collissions when
 
 ## Additional Info
 
-Some endpoints only allow certain roles. For example, operations on `/v1/actors`, `/v1/applications` & `/v1/sponsorships` are only allowed if the actor is an admin. Additional endpoints were created to allow other roles to access those resources, e.g `/v1/login`, `/v1/register`, `/v1/mySponsorships`, `/v1/myApplications`, etc.
+Some endpoints were separated in two different endpoints to only allow certain roles. For example, operations on `/v1/applications` are only allowed if the actor is an admin. An additional endpoint called `/v1/applications/apply` was created to allow explorers to apply to a trip, which made validating data a lot easier and more streamlined on both endpoints. Other examples may be `/v1/actors` as a private, admin only endpoint; and `/v1/login` and `/v1/register` as public endpoints.
